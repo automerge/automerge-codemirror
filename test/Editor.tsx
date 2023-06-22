@@ -24,12 +24,17 @@ export function Editor({handle, path}: EditorProps) {
       extensions: [basicSetup,plugin],
       dispatch(transaction) {
         view.update([transaction])
-        semaphore.reconcile(handle.change, view.state)
+        semaphore.reconcile(handle.doc, handle.changeAt, view)
       },
       parent: containerRef.current,
     }))
 
+    handle.addListener((doc, patches) => {
+      semaphore.reconcile(handle.doc, handle.changeAt, view)
+    })
+
     return () => {
+      handle.removeListeners()
       view.destroy()
     }
   }, [])

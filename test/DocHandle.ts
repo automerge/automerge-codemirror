@@ -6,41 +6,25 @@ type Listener = {
   callback: PatchListener,
 }
 
-type PeerId = string
-
 export class DocHandle {
   doc: automerge.Doc<any>
   listeners: Array<Listener>
-  syncStates: Map<PeerId, SyncState>
   
   constructor(doc: automerge.Doc<any>) {
     this.doc = doc
     this.listeners = []
-    this.syncStates = new Map()
   }
 
-  change = (atHeads: automerge.Heads, fn: (doc: automerge.Doc<any>) => void): Heads => {
-    console.log("updating")
-    console.log("before: ", this.doc.text.toString())
+  changeAt = (atHeads: automerge.Heads, fn: (doc: automerge.Doc<any>) => void): Heads => {
     this.doc = automerge.changeAt(this.doc, atHeads, fn)
     this._notifyListeners()
-    console.log("after: ", this.doc.text.toString())
     return getHeads(this.doc)
   }
 
-  receiveSyncMessage = (from: PeerId, msg: SyncMessage) => {
-    let syncState = this._syncStateForPeer(from)
-    const [newDoc, newSyncState, _] = automerge.receiveSyncMessage(this.doc, syncState, msg)
-    this.doc = newDoc
-    this.syncStates.set(from, newSyncState)
+  change = (fn: (doc: automerge.Doc<any>) => void): Heads => {
+    this.doc = automerge.change(this.doc, fn)
     this._notifyListeners()
-  }
-
-  generateSyncMessage = (to: PeerId): SyncMessage | null => {
-    let syncState = this._syncStateForPeer(to)
-    const [newSyncState, msg] = automerge.generateSyncMessage(this.doc, syncState)
-    this.syncStates.set(to, newSyncState)
-    return msg
+    return getHeads(this.doc)
   }
 
   addListener = (listener: PatchListener) => {
@@ -48,13 +32,8 @@ export class DocHandle {
     this.listeners.push({heads, callback: listener})
   }
 
-  _syncStateForPeer = (peer: PeerId): SyncState => {
-    let syncState = this.syncStates.get(peer)
-    if (!syncState) {
-      syncState = automerge.initSyncState()
-      this.syncStates.set(peer, syncState)
-    }
-    return syncState
+  removeListeners = () => {
+    this.listeners = []
   }
 
   _notifyListeners = () => {

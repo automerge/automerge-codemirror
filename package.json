@@ -1,5 +1,5 @@
 {
-  "name": "amg-codemirror",
+  "name": "@automerge/automerge-codemirror",
   "version": "1.0.0",
   "main": "index.js",
   "license": "MIT",
@@ -14,6 +14,7 @@
     "codemirror": "^6.0.1"
   },
   "devDependencies": {
+    "@cypress/react18": "^2.0.0",
     "@vitejs/plugin-react": "^4.0.0",
     "cypress": "^12.14.0",
     "ist": "^1.1.7",

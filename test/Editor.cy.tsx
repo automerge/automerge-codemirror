@@ -2,7 +2,7 @@ import React from 'react'
 import {Editor} from './Editor'
 import {unstable as automerge} from "@automerge/automerge"
 import {DocHandle} from "./DocHandle"
-import {mount} from "cypress/react18"
+import {mount} from "@cypress/react18"
 
 describe('<Editor />', () => {
   it('renders', () => {
@@ -16,17 +16,55 @@ describe('<Editor />', () => {
     const doc = automerge.from({text: "Hello World\nGoodbye World"})
     const handle = new DocHandle(doc)
     mount(<Editor handle={handle} path={["text"]} />)
-    cy.get("div.cm-content").should("have.html", expectedHtml(["Hello world", "Goodbye World"]))
+    cy.get("div.cm-content").should("have.html", expectedHtml(["Hello World", "Goodbye World"]))
   })
 
-  it("handles local inserts", () => {
-    const doc = automerge.from({text: "Hello World"})
-    const handle = new DocHandle(doc)
-    mount(<Editor handle={handle} path={["text"]} />)
-    cy.get("div.cm-content").type("!")
-    cy.get("div.cm-content").should("have.html", '<div class="cm-activeLine cm-line">Hello World!</div>')
-    cy.wait(100).then(() => {
-      assert.equal(handle.doc.text.toString(), "Hello World!")
+  describe("local edits", () => {
+
+    it("handles local inserts", () => {
+      const doc = automerge.from({text: "Hello World"})
+      const handle = new DocHandle(doc)
+      mount(<Editor handle={handle} path={["text"]} />)
+      cy.get("div.cm-content").type("!")
+      cy.get("div.cm-content").should("have.html", expectedHtml(["Hello World!"]))
+      cy.wait(100).then(() => {
+        assert.equal(handle.doc.text.toString(), "Hello World!")
+      })
+    })
+
+    it.only("allows inserting multiple blank lines", () => {
+      const doc = automerge.from({text: "Hello World!"})
+      const handle = new DocHandle(doc)
+      mount(<Editor handle={handle} path={["text"]} />)
+      cy.get("div.cm-content").type("\n\n{backspace}\nThe ultimate line")
+      cy.get("div.cm-content").should("have.html", expectedHtml(
+        [
+          "Hello World!",
+          "",
+          "The ultimate line"
+        ], 2))
+      cy.wait(100).then(() => {
+        assert.equal(handle.doc.text.toString(), "Hello World!\n\nThe ultimate line")
+      })
+    })
+  })
+
+  describe("remote changes", () => {
+    it("should incorporate inserts from remotes", () => {
+      const doc = automerge.from({text: "Hello World!"})
+      const handle = new DocHandle(doc)
+      mount(<Editor handle={handle} path={["text"]} />)
+      cy.wait(100).then(() => {
+        handle.change(d => {
+          automerge.splice(d, ["text"], 5, 0, " Happy")
+        })
+      }).then(() => {
+        cy.get("div.cm-content").should("have.html", expectedHtml(
+          [
+            "Hello Happy World!",
+          ])
+        )
+      })
     })
   })
 
@@ -35,6 +73,10 @@ describe('<Editor />', () => {
 function expectedHtml(lines: string[], activeIndex: number = 0): string {
   return lines.map((line, index) => {
     const active = index === activeIndex ? "cm-activeLine " : ""
-    return `<div class="${active}cm-line">${line}</div>`
+    let lineHtml = line
+    if (lineHtml === "") {
+      lineHtml = "<br>"
+    }
+    return `<div class="${active}cm-line">${lineHtml}</div>`
   }).join("")
 }
