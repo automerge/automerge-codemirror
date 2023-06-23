@@ -1,8 +1,8 @@
-import React, {useEffect, useRef, useState} from "react"
+import React, { useEffect, useRef } from "react"
 
-import { EditorView, keymap } from "@codemirror/view"
+import { EditorView } from "@codemirror/view"
 import { basicSetup } from "codemirror"
-import {unstable as automerge, Prop} from "@automerge/automerge"
+import { Prop } from "@automerge/automerge"
 import { plugin as amgPlugin, PatchSemaphore } from "../src"
 import { type DocHandle } from "./DocHandle"
 
@@ -11,9 +11,9 @@ export type EditorProps = {
   path: Prop[]
 }
 
-export function Editor({handle, path}: EditorProps) {
+export function Editor({ handle, path }: EditorProps) {
   const containerRef = useRef(null)
-  const editorRoot = useRef<HTMLDivElement>(null!)
+  const editorRoot = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const source = handle.doc.text
@@ -21,7 +21,7 @@ export function Editor({handle, path}: EditorProps) {
     const semaphore = new PatchSemaphore(plugin)
     const view = (editorRoot.current = new EditorView({
       doc: source.toString(),
-      extensions: [basicSetup,plugin],
+      extensions: [basicSetup, plugin],
       dispatch(transaction) {
         view.update([transaction])
         semaphore.reconcile(handle.doc, handle.changeAt, view)
@@ -29,7 +29,7 @@ export function Editor({handle, path}: EditorProps) {
       parent: containerRef.current,
     }))
 
-    handle.addListener((doc, patches) => {
+    handle.addListener((_doc, _patches) => {
       semaphore.reconcile(handle.doc, handle.changeAt, view)
     })
 
@@ -40,7 +40,10 @@ export function Editor({handle, path}: EditorProps) {
   }, [])
 
   return (
-    <div className="codemirror-editor" ref={containerRef} onKeyDown={(evt) => evt.stopPropagation()} />
+    <div
+      className="codemirror-editor"
+      ref={containerRef}
+      onKeyDown={evt => evt.stopPropagation()}
+    />
   )
-
 }

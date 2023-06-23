@@ -1,8 +1,14 @@
-import {DelPatch, InsertPatch, Patch, Prop, SpliceTextPatch} from "@automerge/automerge";
-import {ChangeSpec, EditorState, Transaction} from "@codemirror/state";
+import {
+  DelPatch,
+  InsertPatch,
+  Patch,
+  Prop,
+  SpliceTextPatch,
+} from "@automerge/automerge"
+import { ChangeSpec } from "@codemirror/state"
 
-export default function(target: Prop[], patches: Patch[]): Array<ChangeSpec> {
-  let result = []
+export default function (target: Prop[], patches: Patch[]): Array<ChangeSpec> {
+  const result = []
   for (const patch of patches) {
     if (patch.action === "insert") {
       result.push(...handleInsert(target, patch))
@@ -20,16 +26,19 @@ function handleInsert(target: Prop[], patch: InsertPatch): Array<ChangeSpec> {
   if (index == null) {
     return []
   }
-  const text = patch.values.map(v => v? v.toString() : "").join("")
-  return [{from: index, to: index, insert: text}]
+  const text = patch.values.map(v => (v ? v.toString() : "")).join("")
+  return [{ from: index, to: index, insert: text }]
 }
 
-function handleSplice(target: Prop[], patch: SpliceTextPatch): Array<ChangeSpec> {
+function handleSplice(
+  target: Prop[],
+  patch: SpliceTextPatch
+): Array<ChangeSpec> {
   const index = charPath(target, patch.path)
   if (index == null) {
     return []
   }
-  return [{from: index, to: index, insert: patch.value}]
+  return [{ from: index, to: index, insert: patch.value }]
 }
 
 function handleDel(target: Prop[], patch: DelPatch): Array<ChangeSpec> {
@@ -38,7 +47,7 @@ function handleDel(target: Prop[], patch: DelPatch): Array<ChangeSpec> {
     return []
   }
   const length = patch.length || 1
-  return [{from: index - length, to: index}]
+  return [{ from: index - length, to: index }]
 }
 
 // If the path of the patch is of the form [path, <index>] then we know this is
@@ -52,4 +61,3 @@ function charPath(textPath: Prop[], candidatePath: Prop[]): number | null {
   if (typeof index === "number") return index
   return null
 }
-

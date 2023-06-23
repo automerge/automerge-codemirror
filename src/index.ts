@@ -1,2 +1,2 @@
-export {plugin} from "./plugin"
+export { plugin } from "./plugin"
 export { PatchSemaphore } from "./PatchSemaphore"
