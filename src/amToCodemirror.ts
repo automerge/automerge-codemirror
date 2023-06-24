@@ -5,20 +5,43 @@ import {
   Prop,
   SpliceTextPatch,
 } from "@automerge/automerge"
-import { ChangeSpec } from "@codemirror/state"
+import { ChangeSet, ChangeSpec, EditorSelection } from "@codemirror/state"
+import { EditorView } from "@codemirror/view"
+import { reconcileAnnotationType } from "./plugin"
 
-export default function (target: Prop[], patches: Patch[]): Array<ChangeSpec> {
-  const result = []
+export default function (
+  view: EditorView,
+  selection: EditorSelection,
+  target: Prop[],
+  patches: Patch[]
+) {
   for (const patch of patches) {
-    if (patch.action === "insert") {
-      result.push(...handleInsert(target, patch))
-    } else if (patch.action === "splice") {
-      result.push(...handleSplice(target, patch))
-    } else if (patch.action === "del") {
-      result.push(...handleDel(target, patch))
+    const changeSpec = handlePatch(patch, target)
+    if (changeSpec != null) {
+      const changeSet = ChangeSet.of(changeSpec, view.state.doc.length, "\n")
+      selection = selection.map(changeSet, 1)
+      view.dispatch({
+        changes: changeSet,
+        annotations: reconcileAnnotationType.of({}),
+      })
     }
   }
-  return result
+  view.dispatch({
+    selection,
+    annotations: reconcileAnnotationType.of({}),
+  })
+}
+
+function handlePatch(patch: Patch, target: Prop[]): ChangeSpec | null {
+  if (patch.action === "insert") {
+    return handleInsert(target, patch)
+  } else if (patch.action === "splice") {
+    return handleSplice(target, patch)
+  } else if (patch.action === "del") {
+    return handleDel(target, patch)
+  } else {
+    return null
+  }
 }
 
 function handleInsert(target: Prop[], patch: InsertPatch): Array<ChangeSpec> {

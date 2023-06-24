@@ -10,8 +10,6 @@ import {
   updateHeads,
   getLastHeads,
 } from "./plugin"
-import { ChangeSet } from "@codemirror/state"
-import { Prop } from "@automerge/automerge"
 
 type Doc<T> = automerge.Doc<T>
 type Heads = automerge.Heads
@@ -43,7 +41,6 @@ export class PatchSemaphore {
       const remoteHeads = automerge.getHeads(doc)
       const oldHeads = getLastHeads(view.state, this._field)
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      const originalText = lookup(automerge.view(doc, oldHeads), path)!
       let selection = view.state.selection
 
       const transactions = view.state
@@ -76,32 +73,15 @@ export class PatchSemaphore {
       // now get the diff between the updated state of the document and the heads
       // and apply that to the codemirror doc
       const diff = automerge.diff(doc, oldHeads, newHeads)
-      const changes = amToCodemirror(path, diff)
-      const changeSpec = ChangeSet.of(changes, originalText.length)
-      selection = selection.map(changeSpec, 1)
+      amToCodemirror(view, selection, path, diff)
 
       view.dispatch({
-        changes,
-        selection,
         effects: updateHeads(newHeads),
         annotations: reconcileAnnotationType.of({}),
       })
 
       this._inReconcile = false
     }
-  }
-}
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function lookup(doc: Doc<any>, path: Prop[]): string | null {
-  let current = doc
-  for (const prop of path) {
-    current = current[prop]
-  }
-  if (typeof current === "string") {
-    return current
-  } else {
-    return null
   }
 }
 

@@ -75,6 +75,33 @@ describe("<Editor />", () => {
           )
         })
     })
+
+    it("handles simultaneous remote and local changes", () => {
+      const doc = automerge.from({ text: "Hello World!" })
+      const handle = new DocHandle(doc)
+      mount(<Editor handle={handle} path={["text"]} />)
+      cy.wait(100)
+        .then(() => {
+          handle.change(d => {
+            automerge.splice(d, ["text"], 5, 0, " Happy")
+          })
+        })
+        .then(() => {
+          cy.get("div.cm-content").should(
+            "have.html",
+            expectedHtml(["Hello Happy World!"])
+          )
+        })
+        .then(() => {
+          cy.get("div.cm-content").type("!")
+        })
+        .then(() => {
+          cy.get("div.cm-content").should(
+            "have.html",
+            expectedHtml(["Hello Happy World!!"])
+          )
+        })
+    })
   })
 })
 
