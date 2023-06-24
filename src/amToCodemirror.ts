@@ -38,7 +38,7 @@ function handleSplice(
   if (index == null) {
     return []
   }
-  return [{ from: index, to: index, insert: patch.value }]
+  return [{ from: index, insert: patch.value }]
 }
 
 function handleDel(target: Prop[], patch: DelPatch): Array<ChangeSpec> {
@@ -47,7 +47,7 @@ function handleDel(target: Prop[], patch: DelPatch): Array<ChangeSpec> {
     return []
   }
   const length = patch.length || 1
-  return [{ from: index - length, to: index }]
+  return [{ from: index, to: index + length }]
 }
 
 // If the path of the patch is of the form [path, <index>] then we know this is

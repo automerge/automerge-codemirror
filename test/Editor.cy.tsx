@@ -37,11 +37,13 @@ describe("<Editor />", () => {
       })
     })
 
-    it.only("allows inserting multiple blank lines", () => {
+    it("allows inserting multiple blank lines", () => {
       const doc = automerge.from({ text: "Hello World!" })
       const handle = new DocHandle(doc)
       mount(<Editor handle={handle} path={["text"]} />)
-      cy.get("div.cm-content").type("\n\n{backspace}\nThe ultimate line")
+      cy.get("div.cm-content").type(
+        "{enter}{enter}{backspace}{enter}The ultimate line"
+      )
       cy.get("div.cm-content").should(
         "have.html",
         expectedHtml(["Hello World!", "", "The ultimate line"], 2)

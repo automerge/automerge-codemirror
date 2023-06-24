@@ -29,8 +29,8 @@ export function Editor({ handle, path }: EditorProps) {
       parent: containerRef.current,
     }))
 
-    handle.addListener((_doc, _patches) => {
-      semaphore.reconcile(handle.doc, handle.changeAt, view)
+    handle.addListener((doc, _patches) => {
+      semaphore.reconcile(doc, handle.changeAt, view)
     })
 
     return () => {
