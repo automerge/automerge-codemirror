@@ -1,6 +1,6 @@
 {
   "name": "@automerge/automerge-codemirror",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "main": "dist/index.js",
   "license": "MIT",
   "scripts": {
@@ -10,8 +10,8 @@
     "cypress:open": "cypress open"
   },
   "files": [
-    "./dist/**/*.ts",
-    "./dist/**/*.js"
+    "dist/**/*.ts",
+    "dist/**/*.js"
   ],
   "dependencies": {
     "@automerge/automerge": "^2.1.0-alpha.5",
