@@ -80,25 +80,45 @@ describe("<Editor />", () => {
       const doc = automerge.from({ text: "Hello World!" })
       const handle = new DocHandle(doc)
       mount(<Editor handle={handle} path={["text"]} />)
+
+      // Create a local change
+      cy.get("div.cm-content").type("!").then(() => {
+        cy.get("div.cm-content").should(
+          "have.html",
+          expectedHtml(["Hello World!!"])
+        )
+      })
+
+      let branch: automerge.Doc<any>
+      // create a remote change then merge it in
       cy.wait(100)
         .then(() => {
-          handle.change(d => {
-            automerge.splice(d, ["text"], 5, 0, " Happy")
+          branch = automerge.clone(handle.doc)
+          branch = automerge.change(branch, d => {
+              automerge.splice(d, ["text"], 5, 0, " Happy")
           })
+          handle.merge(branch)
         })
-        .then(() => {
-          cy.get("div.cm-content").should(
-            "have.html",
-            expectedHtml(["Hello Happy World!"])
-          )
-        })
-        .then(() => {
-          cy.get("div.cm-content").type("!")
-        })
+        .wait(100)
         .then(() => {
           cy.get("div.cm-content").should(
             "have.html",
             expectedHtml(["Hello Happy World!!"])
+          )
+        })
+
+      // Now create another remote change and receive that
+      cy.wait(100)
+        .then(() => {
+          branch = automerge.change(branch, d => {
+              automerge.splice(d, ["text"], 5, 0, " hello")
+          })
+          handle.merge(branch)
+        })
+        .then(() => {
+          cy.get("div.cm-content").should(
+            "have.html",
+            expectedHtml(["Hello hello Happy World!!"])
           )
         })
     })

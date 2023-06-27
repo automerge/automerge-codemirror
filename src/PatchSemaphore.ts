@@ -38,9 +38,7 @@ export class PatchSemaphore {
       this._inReconcile = true
 
       const path = getPath(view.state, this._field)
-      const remoteHeads = automerge.getHeads(doc)
       const oldHeads = getLastHeads(view.state, this._field)
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       let selection = view.state.selection
 
       const transactions = view.state
@@ -59,16 +57,12 @@ export class PatchSemaphore {
       }
 
       // now apply the unreconciled transactions to the document
-      let newHeads = codeMirrorToAm(
+      const newHeads = codeMirrorToAm(
         this._field,
         change,
         transactions,
         view.state
       )
-      if (headsEqual(oldHeads, newHeads)) {
-        // No changes were made, so we're just applying remote changes
-        newHeads = remoteHeads
-      }
 
       // now get the diff between the updated state of the document and the heads
       // and apply that to the codemirror doc
@@ -83,6 +77,7 @@ export class PatchSemaphore {
       this._inReconcile = false
     }
   }
+
 }
 
 function headsEqual(a: Heads, b: Heads): boolean {
