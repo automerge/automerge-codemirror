@@ -14,7 +14,7 @@
     "dist/**/*.js"
   ],
   "dependencies": {
-    "@automerge/automerge": "^2.1.0-alpha.5",
+    "@automerge/automerge": "^2.1.0-alpha.7",
     "@codemirror/state": "^6.2.1",
     "@codemirror/view": "^6.13.2",
     "automerge-repo": "^0.1.0",
