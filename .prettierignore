@@ -1,0 +1,4 @@
+.github
+.eslintrc.cjs
+*.html
+dist
