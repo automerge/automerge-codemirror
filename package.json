@@ -1,6 +1,6 @@
 {
   "name": "@automerge/automerge-codemirror",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "main": "dist/index.js",
   "license": "MIT",
   "scripts": {
@@ -17,7 +17,6 @@
     "@automerge/automerge": "^2.1.0-alpha.7",
     "@codemirror/state": "^6.2.1",
     "@codemirror/view": "^6.13.2",
-    "automerge-repo": "^0.1.0",
     "codemirror": "^6.0.1"
   },
   "devDependencies": {
