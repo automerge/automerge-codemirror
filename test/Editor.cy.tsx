@@ -53,20 +53,23 @@ describe("<Editor />", () => {
     it("allows inserting multiple blank lines", () => {
       const { handle } = makeHandle("Hello World!")
       mount(<Editor handle={handle} path={["text"]} />)
-      cy.get("div.cm-content").type(
-        "{enter}{enter}{backspace}{enter}{enter}The ultimate line"
-      )
+      
+      cy.wait(1000).then( () => {
+        cy.get("div.cm-content").type(
+            "{enter}{enter}{backspace}{enter}."
+        )
 
-      cy.wait(100).then(async () => {
-        const doc = await handle.doc()
-        assert.equal(
-          doc.text,
-          "Hello World!\n\nThe ultimate line"
-        )
-        cy.get("div.cm-content").should(
-          "have.html",
-          expectedHtml(["Hello World!", "", "The ultimate line"], 2)
-        )
+        cy.wait(100).then(async () => {
+          const doc = await handle.doc()
+          assert.equal(
+            doc.text,
+            "Hello World!\n\n."
+          )
+          cy.get("div.cm-content").should(
+            "have.html",
+            expectedHtml(["Hello World!", "", "."], 2)
+          )
+        })
       })
     })
   })
@@ -142,7 +145,7 @@ describe("<Editor />", () => {
 function expectedHtml(lines: string[], activeIndex = 0): string {
   return lines
     .map((line, index) => {
-      const active = "" //index === activeIndex ? "cm-activeLine " : ""
+      const active = index === activeIndex ? "cm-activeLine " : ""
       let lineHtml = line
       if (lineHtml === "") {
         lineHtml = "<br>"

@@ -64,6 +64,7 @@ export class PatchSemaphore {
 
       // NOTE: null and undefined each come from automerge and repo respectively
       if (newHeads === null || newHeads === undefined) {
+        // TODO: @alexjg this is the call that's resetting the editor state on click
         newHeads = automerge.getHeads(doc)
       }
 
