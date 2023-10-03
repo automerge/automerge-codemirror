@@ -3,8 +3,7 @@ import { Heads } from "@automerge/automerge"
 import { EditorState, Text, Transaction } from "@codemirror/state"
 import { type Field } from "./plugin"
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type Update = (atHeads: Heads, change: (doc: any) => void) => Heads
+type Update = (atHeads: Heads, change: (doc: am.Doc<unknown>) => void) => Heads
 
 export default function (
   field: Field,
@@ -14,8 +13,7 @@ export default function (
 ): Heads {
   const { lastHeads, path } = state.field(field)
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const newHeads = update(lastHeads, (doc: any) => {
+  const newHeads = update(lastHeads, (doc: am.Doc<unknown>) => {
     for (const tr of transactions) {
       tr.changes.iterChanges(
         (

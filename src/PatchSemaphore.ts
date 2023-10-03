@@ -14,8 +14,7 @@ import {
 type Doc<T> = automerge.Doc<T>
 type Heads = automerge.Heads
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type ChangeFn = (atHeads: Heads, change: (doc: Doc<any>) => void) => Heads
+type ChangeFn = (atHeads: Heads, change: (doc: Doc<unknown>) => void) => Heads
 
 export class PatchSemaphore {
   _field: Field
@@ -27,8 +26,7 @@ export class PatchSemaphore {
   }
 
   reconcile = (
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    doc: automerge.Doc<any>,
+    doc: automerge.Doc<unknown>,
     change: ChangeFn,
     view: EditorView
   ) => {
