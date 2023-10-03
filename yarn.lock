@@ -10,10 +10,10 @@
     "@jridgewell/gen-mapping" "^0.3.0"
     "@jridgewell/trace-mapping" "^0.3.9"
 
-"@automerge/automerge-repo@^1.0.5":
-  version "1.0.5"
-  resolved "https://registry.yarnpkg.com/@automerge/automerge-repo/-/automerge-repo-1.0.5.tgz#7441fbe55e8379394f0c9136f722e1cfe8de7f03"
-  integrity sha512-0RIlVPmcG6EHRuguoxIERfXCX4+HNEsxJoHiFSmpT7MHysLYe3NTZHi5fzEvU7aOkTy2vewieDqIThwGc0CTlg==
+"@automerge/automerge-repo@^1.0.6":
+  version "1.0.6"
+  resolved "https://registry.yarnpkg.com/@automerge/automerge-repo/-/automerge-repo-1.0.6.tgz#8ce4c0e4282076587078932490ddcf20bb017a5e"
+  integrity sha512-Ztpsd8K0lrnd3tOrjWho/jiTSQStaYSXgFNtrcTHXT9aC1kvuLSi3xAQTBmU9VxLb2FiEJ7fYLI0yBhHl4CPeQ==
   dependencies:
     bs58check "^3.0.1"
     cbor-x "^1.3.0"

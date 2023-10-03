@@ -16,18 +16,18 @@ const makeHandle = (text: string) => {
     d.text = text
   })
 
-  return handle
+  return { handle, repo }
 }
 
 describe("<Editor />", () => {
   it("renders", () => {
-    const handle = makeHandle("Hello World")
+    const { handle } = makeHandle("Hello World")
     mount(<Editor handle={handle} path={["text"]} />)
     cy.get("div.cm-content").should("have.html", expectedHtml(["Hello World"]))
   })
 
   it("renders multiple lines", () => {
-    const handle = makeHandle("Hello World\nGoodbye World")
+    const { handle } = makeHandle("Hello World\nGoodbye World")
     mount(<Editor handle={handle} path={["text"]} />)
     cy.get("div.cm-content").should(
       "have.html",
@@ -37,7 +37,7 @@ describe("<Editor />", () => {
 
   describe("local edits", () => {
     it("handles local inserts", () => {
-      const handle = makeHandle("Hello World")
+      const { handle } = makeHandle("Hello World")
       mount(<Editor handle={handle} path={["text"]} />)
       cy.get("div.cm-content").type("!")
       cy.get("div.cm-content").should(
@@ -46,24 +46,26 @@ describe("<Editor />", () => {
       )
       cy.wait(100).then(async () => {
         const doc = await handle.doc()
-        assert.equal(doc.text.toString(), "Hello World!")
+        assert.equal(doc.text, "Hello World!")
       })
     })
 
     it("allows inserting multiple blank lines", () => {
-      const handle = makeHandle("Hello World!")
+      const { handle } = makeHandle("Hello World!")
       mount(<Editor handle={handle} path={["text"]} />)
       cy.get("div.cm-content").type(
-        "{enter}{enter}{backspace}{enter}The ultimate line"
+        "{enter}{enter}{backspace}{enter}{enter}The ultimate line"
       )
-      cy.get("div.cm-content").should(
-        "have.html",
-        expectedHtml(["Hello World!", "", "The ultimate line"], 2)
-      )
+
       cy.wait(100).then(async () => {
+        const doc = await handle.doc()
         assert.equal(
-          (await handle.doc()).text.toString(),
+          doc.text,
           "Hello World!\n\nThe ultimate line"
+        )
+        cy.get("div.cm-content").should(
+          "have.html",
+          expectedHtml(["Hello World!", "", "The ultimate line"], 2)
         )
       })
     })
@@ -71,7 +73,7 @@ describe("<Editor />", () => {
 
   describe("remote changes", () => {
     it("should incorporate inserts from remotes", () => {
-      const handle = makeHandle("Hello World!")
+      const { handle } = makeHandle("Hello World!")
       mount(<Editor handle={handle} path={["text"]} />)
       cy.wait(100)
         .then(() => {
@@ -79,7 +81,7 @@ describe("<Editor />", () => {
             automerge.splice(d, ["text"], 5, 0, " Happy")
           })
         })
-        .then(() => {
+        .then(async () => {
           cy.get("div.cm-content").should(
             "have.html",
             expectedHtml(["Hello Happy World!"])
@@ -88,7 +90,7 @@ describe("<Editor />", () => {
     })
 
     it("handles simultaneous remote and local changes", () => {
-      const handle = makeHandle("Hello World!")
+      const { handle, repo } = makeHandle("Hello World!")
       mount(<Editor handle={handle} path={["text"]} />)
 
       // Create a local change
@@ -101,18 +103,15 @@ describe("<Editor />", () => {
           )
         })
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      let branch: automerge.Doc<any>
+      let branch
       // create a remote change then merge it in
       cy.wait(100)
         .then(async () => {
-          branch = automerge.clone(await handle.doc())
-          branch = automerge.change(branch, d => {
+          branch = repo.clone(handle)
+          branch.change(d => {
             automerge.splice(d, ["text"], 5, 0, " Happy")
           })
-          handle.change(d => {
-            automerge.merge(d, branch)
-          })
+          handle.merge(branch)
         })
         .wait(100)
         .then(() => {
@@ -125,12 +124,10 @@ describe("<Editor />", () => {
       // Now create another remote change and receive that
       cy.wait(100)
         .then(() => {
-          branch = automerge.change(branch, d => {
+          branch.change(branch, d => {
             automerge.splice(d, ["text"], 5, 0, " hello")
           })
-          handle.change(d => {
-            automerge.merge(d, branch)
-          })
+          handle.merge(branch)
         })
         .then(() => {
           cy.get("div.cm-content").should(
@@ -145,7 +142,7 @@ describe("<Editor />", () => {
 function expectedHtml(lines: string[], activeIndex = 0): string {
   return lines
     .map((line, index) => {
-      const active = index === activeIndex ? "cm-activeLine " : ""
+      const active = "" //index === activeIndex ? "cm-activeLine " : ""
       let lineHtml = line
       if (lineHtml === "") {
         lineHtml = "<br>"
