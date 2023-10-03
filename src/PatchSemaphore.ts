@@ -1,4 +1,4 @@
-import * as automerge from "@automerge/automerge"
+import { next as automerge } from "@automerge/automerge"
 import { EditorView } from "@codemirror/view"
 import codeMirrorToAm from "./codeMirrorToAm"
 import amToCodemirror from "./amToCodemirror"
@@ -57,12 +57,17 @@ export class PatchSemaphore {
       }
 
       // now apply the unreconciled transactions to the document
-      const newHeads = codeMirrorToAm(
+      let newHeads = codeMirrorToAm(
         this._field,
         change,
         transactions,
         view.state
       )
+
+      // NOTE: null and undefined each come from automerge and repo respectively
+      if (newHeads === null || newHeads === undefined) {
+        newHeads = automerge.getHeads(doc)
+      }
 
       // now get the diff between the updated state of the document and the heads
       // and apply that to the codemirror doc

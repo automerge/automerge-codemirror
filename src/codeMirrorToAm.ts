@@ -1,4 +1,4 @@
-import { unstable as am } from "@automerge/automerge"
+import { next as am } from "@automerge/automerge"
 import { Heads } from "@automerge/automerge"
 import { EditorState, Text, Transaction } from "@codemirror/state"
 import { type Field } from "./plugin"
