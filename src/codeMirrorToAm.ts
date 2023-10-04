@@ -3,14 +3,17 @@ import { Heads } from "@automerge/automerge"
 import { EditorState, Text, Transaction } from "@codemirror/state"
 import { type Field } from "./plugin"
 
-type Update = (atHeads: Heads, change: (doc: am.Doc<unknown>) => void) => Heads
+type Update = (
+  atHeads: Heads,
+  change: (doc: am.Doc<unknown>) => void
+) => Heads | undefined
 
 export default function (
   field: Field,
   update: Update,
   transactions: Transaction[],
   state: EditorState
-): Heads {
+): Heads | undefined {
   const { lastHeads, path } = state.field(field)
 
   const newHeads = update(lastHeads, (doc: am.Doc<unknown>) => {

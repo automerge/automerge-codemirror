@@ -25,13 +25,13 @@ export function Editor({ handle, path }: EditorProps) {
         extensions: [basicSetup, plugin],
         dispatch(transaction) {
           view.update([transaction])
-          semaphore.reconcile(doc, handle.changeAt.bind(handle), view)
+          semaphore.reconcile(handle, view)
         },
         parent: containerRef.current,
       }))
 
       handle.addListener("change", ({ doc, patchInfo }) => {
-        semaphore.reconcile(doc, handle.changeAt.bind(handle), view)
+        semaphore.reconcile(handle, view)
       })
 
       return () => {

@@ -1,4 +1,5 @@
 import { next as automerge } from "@automerge/automerge"
+import { DocHandle } from "@automerge/automerge-repo"
 import { EditorView } from "@codemirror/view"
 import codeMirrorToAm from "./codeMirrorToAm"
 import amToCodemirror from "./amToCodemirror"
@@ -14,7 +15,10 @@ import {
 type Doc<T> = automerge.Doc<T>
 type Heads = automerge.Heads
 
-type ChangeFn = (atHeads: Heads, change: (doc: Doc<unknown>) => void) => Heads
+type ChangeFn = (
+  atHeads: Heads,
+  change: (doc: Doc<unknown>) => void
+) => Heads | undefined
 
 export class PatchSemaphore {
   _field: Field
@@ -25,11 +29,7 @@ export class PatchSemaphore {
     this._field = field
   }
 
-  reconcile = (
-    doc: automerge.Doc<unknown>,
-    change: ChangeFn,
-    view: EditorView
-  ) => {
+  reconcile = (handle: DocHandle<unknown>, view: EditorView) => {
     if (this._inReconcile) {
       return
     } else {
@@ -57,7 +57,7 @@ export class PatchSemaphore {
       // now apply the unreconciled transactions to the document
       let newHeads = codeMirrorToAm(
         this._field,
-        change,
+        handle.changeAt.bind(handle),
         transactions,
         view.state
       )
@@ -65,12 +65,12 @@ export class PatchSemaphore {
       // NOTE: null and undefined each come from automerge and repo respectively
       if (newHeads === null || newHeads === undefined) {
         // TODO: @alexjg this is the call that's resetting the editor state on click
-        newHeads = automerge.getHeads(doc)
+        newHeads = automerge.getHeads(handle.docSync())
       }
 
       // now get the diff between the updated state of the document and the heads
       // and apply that to the codemirror doc
-      const diff = automerge.diff(doc, oldHeads, newHeads)
+      const diff = automerge.diff(handle.docSync(), oldHeads, newHeads)
       amToCodemirror(view, selection, path, diff)
 
       view.dispatch({
