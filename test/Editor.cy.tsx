@@ -1,7 +1,7 @@
 import React from "react"
 import { Editor } from "./Editor"
 import { next as automerge } from "@automerge/automerge"
-import { DocHandle, Repo } from "@automerge/automerge-repo"
+import { Repo } from "@automerge/automerge-repo"
 import { mount } from "@cypress/react18"
 
 type TextDoc = { text: string }
@@ -53,18 +53,13 @@ describe("<Editor />", () => {
     it("allows inserting multiple blank lines", () => {
       const { handle } = makeHandle("Hello World!")
       mount(<Editor handle={handle} path={["text"]} />)
-      
-      cy.wait(1000).then( () => {
-        cy.get("div.cm-content").type(
-            "{enter}{enter}{backspace}{enter}."
-        )
+
+      cy.wait(1000).then(() => {
+        cy.get("div.cm-content").type("{enter}{enter}{backspace}{enter}.")
 
         cy.wait(100).then(async () => {
           const doc = await handle.doc()
-          assert.equal(
-            doc.text,
-            "Hello World!\n\n."
-          )
+          assert.equal(doc.text, "Hello World!\n\n.")
           cy.get("div.cm-content").should(
             "have.html",
             expectedHtml(["Hello World!", "", "."], 2)
