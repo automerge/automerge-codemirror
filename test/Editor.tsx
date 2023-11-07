@@ -30,12 +30,14 @@ export function Editor({ handle, path }: EditorProps) {
       parent: containerRef.current,
     }))
 
-    handle.addListener("change", ({ doc, patchInfo }) => {
+    const handleChange = ({ doc, patchInfo }) => {
       semaphore.reconcile(handle, view)
-    })
+    }
+
+    handle.addListener("change", handleChange)
 
     return () => {
-      handle.removeAllListeners()
+      handle.removeListener("change", handleChange)
       view.destroy()
     }
   }, [])
