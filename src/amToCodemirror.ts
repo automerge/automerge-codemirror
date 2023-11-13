@@ -3,9 +3,10 @@ import {
   InsertPatch,
   Patch,
   Prop,
+  PutPatch,
   SpliceTextPatch,
 } from "@automerge/automerge"
-import { ChangeSet, ChangeSpec, EditorSelection } from "@codemirror/state"
+import { ChangeSet, ChangeSpec, EditorSelection, EditorState } from "@codemirror/state"
 import { EditorView } from "@codemirror/view"
 import { reconcileAnnotationType } from "./plugin"
 
@@ -16,7 +17,7 @@ export default function (
   patches: Patch[]
 ) {
   for (const patch of patches) {
-    const changeSpec = handlePatch(patch, target)
+    const changeSpec = handlePatch(patch, target, view.state)
     if (changeSpec != null) {
       const changeSet = ChangeSet.of(changeSpec, view.state.doc.length, "\n")
       selection = selection.map(changeSet, 1)
@@ -32,13 +33,15 @@ export default function (
   })
 }
 
-function handlePatch(patch: Patch, target: Prop[]): ChangeSpec | null {
+function handlePatch(patch: Patch, target: Prop[], state: EditorState): ChangeSpec | null {
   if (patch.action === "insert") {
     return handleInsert(target, patch)
   } else if (patch.action === "splice") {
     return handleSplice(target, patch)
   } else if (patch.action === "del") {
     return handleDel(target, patch)
+  } else if(patch.action === "put") {
+    return handlePut(target, patch, state)
   } else {
     return null
   }
@@ -71,6 +74,18 @@ function handleDel(target: Prop[], patch: DelPatch): Array<ChangeSpec> {
   }
   const length = patch.length || 1
   return [{ from: index, to: index + length }]
+}
+
+function handlePut(target: Prop[], patch: PutPatch, state: EditorState): Array<ChangeSpec> {
+  const index = charPath(target, [...patch.path, 0]);
+  if (index == null) {
+      return [];
+  }
+  const length = state.doc.length;
+  if(typeof patch.value !== "string") {
+    return [] // TODO(dmaretskyi): How to handle non string values?
+  }
+  return [{ from: 0, to: length, insert: patch.value as any }];
 }
 
 // If the path of the patch is of the form [path, <index>] then we know this is

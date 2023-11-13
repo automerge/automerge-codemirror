@@ -1,4 +1,4 @@
-import { next as automerge } from "@automerge/automerge"
+import { next as automerge, equals } from "@automerge/automerge"
 import { DocHandle } from "@automerge/automerge-repo"
 import { EditorView } from "@codemirror/view"
 import codeMirrorToAm from "./codeMirrorToAm"
@@ -70,7 +70,7 @@ export class PatchSemaphore {
 
       // now get the diff between the updated state of the document and the heads
       // and apply that to the codemirror doc
-      const diff = automerge.diff(handle.docSync(), oldHeads, newHeads)
+      const diff = automerge.equals(oldHeads, newHeads) ? [] : automerge.diff(handle.docSync(), oldHeads, newHeads)
       amToCodemirror(view, selection, path, diff)
 
       view.dispatch({
