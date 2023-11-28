@@ -70,7 +70,9 @@ export class PatchSemaphore {
 
       // now get the diff between the updated state of the document and the heads
       // and apply that to the codemirror doc
-      const diff = automerge.equals(oldHeads, newHeads) ? [] : automerge.diff(handle.docSync(), oldHeads, newHeads)
+      const diff = automerge.equals(oldHeads, newHeads)
+        ? []
+        : automerge.diff(handle.docSync(), oldHeads, newHeads)
       amToCodemirror(view, selection, path, diff)
 
       view.dispatch({

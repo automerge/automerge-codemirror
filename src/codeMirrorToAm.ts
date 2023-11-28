@@ -18,17 +18,17 @@ export default function (
 
   // We don't want to call `automerge.updateAt` if there are no changes.
   // Otherwise later on `automerge.diff` will return empty patches that result in a no-op but still mess up the selection.
-  let hasChanges = false;
+  let hasChanges = false
   for (const tr of transactions) {
     if (tr.changes.length) {
       tr.changes.iterChanges(() => {
-        hasChanges = true;
-      });
+        hasChanges = true
+      })
     }
   }
 
-  if(!hasChanges) {
-    return undefined;
+  if (!hasChanges) {
+    return undefined
   }
 
   const newHeads = update(lastHeads, (doc: am.Doc<unknown>) => {
