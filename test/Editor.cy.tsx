@@ -72,10 +72,7 @@ describe("<Editor />", () => {
       const { handle } = makeHandle("")
       mount(<Editor handle={handle} path={["text"]} />)
       cy.get("div.cm-content").type("{backspace}Hello")
-      cy.get("div.cm-content").should(
-        "have.html",
-        expectedHtml(["Hello"])
-      )
+      cy.get("div.cm-content").should("have.html", expectedHtml(["Hello"]))
       cy.wait(100).then(async () => {
         const doc = await handle.doc()
         assert.equal(doc.text, "Hello")
