@@ -7,44 +7,55 @@ import {
   StateField,
   type Transaction,
   type TransactionSpec,
-} from '@codemirror/state';
-import { ViewPlugin, type EditorView, type PluginValue, type ViewUpdate } from '@codemirror/view';
+} from "@codemirror/state"
+import {
+  ViewPlugin,
+  type EditorView,
+  type PluginValue,
+  type ViewUpdate,
+} from "@codemirror/view"
 
-import * as automerge from '@automerge/automerge';
-import { type Heads, type Prop } from '@automerge/automerge';
+import * as automerge from "@automerge/automerge"
+import { type Heads, type Prop } from "@automerge/automerge"
 
-import { PatchSemaphore } from './PatchSemaphore';
-import { type IDocHandle } from './handle';
+import { PatchSemaphore } from "./PatchSemaphore"
+import { type IDocHandle } from "./handle"
 
 export type Value = {
-  lastHeads: Heads;
-  path: Prop[];
-  unreconciledTransactions: Transaction[];
-};
+  lastHeads: Heads
+  path: Prop[]
+  unreconciledTransactions: Transaction[]
+}
 
 type UpdateHeads = {
-  newHeads: Heads;
-};
+  newHeads: Heads
+}
 
-export const effectType = StateEffect.define<UpdateHeads>({});
+export const effectType = StateEffect.define<UpdateHeads>({})
 
-export const updateHeads = (newHeads: Heads): StateEffect<UpdateHeads> => effectType.of({ newHeads });
+export const updateHeads = (newHeads: Heads): StateEffect<UpdateHeads> =>
+  effectType.of({ newHeads })
 
-export const getLastHeads = (state: EditorState, field: Field): Heads => state.field(field).lastHeads;
+export const getLastHeads = (state: EditorState, field: Field): Heads =>
+  state.field(field).lastHeads
 
-export const getPath = (state: EditorState, field: Field): Prop[] => state.field(field).path;
+export const getPath = (state: EditorState, field: Field): Prop[] =>
+  state.field(field).path
 
-export type Field = StateField<Value>;
+export type Field = StateField<Value>
 
 const semaphoreFacet = Facet.define<PatchSemaphore, PatchSemaphore>({
-  combine: (values) => values.at(-1)!, // Take last.
-});
+  combine: values => values.at(-1)!, // Take last.
+})
 
 export type AutomergePlugin = {
-  extension: Extension;
-};
+  extension: Extension
+}
 
-export const automergePlugin = (handle: IDocHandle, path: Prop[]): AutomergePlugin => {
+export const automergePlugin = (
+  handle: IDocHandle,
+  path: Prop[]
+): AutomergePlugin => {
   const stateField: StateField<Value> = StateField.define({
     create: () => ({
       lastHeads: automerge.getHeads(handle.docSync()!),
@@ -56,79 +67,83 @@ export const automergePlugin = (handle: IDocHandle, path: Prop[]): AutomergePlug
         lastHeads: value.lastHeads,
         unreconciledTransactions: value.unreconciledTransactions.slice(),
         path: path.slice(),
-      };
-      let clearUnreconciled = false;
+      }
+      let clearUnreconciled = false
       for (const effect of tr.effects) {
         if (effect.is(effectType)) {
-          result.lastHeads = effect.value.newHeads;
-          clearUnreconciled = true;
+          result.lastHeads = effect.value.newHeads
+          clearUnreconciled = true
         }
       }
       if (clearUnreconciled) {
-        result.unreconciledTransactions = [];
+        result.unreconciledTransactions = []
       } else {
         if (!isReconcileTx(tr)) {
-          result.unreconciledTransactions.push(tr);
+          result.unreconciledTransactions.push(tr)
         }
       }
-      return result;
+      return result
     },
-  });
-  const semaphore = new PatchSemaphore(stateField);
+  })
+  const semaphore = new PatchSemaphore(stateField)
 
   const viewPlugin = ViewPlugin.fromClass(
     class AutomergeCodemirrorViewPlugin implements PluginValue {
-      private _view: EditorView;
+      private _view: EditorView
 
       constructor(view: EditorView) {
-        this._view = view;
-        handle.addListener('change', this._handleChange);
+        this._view = view
+        handle.addListener("change", this._handleChange)
       }
 
       update(update: ViewUpdate) {
-        if (update.transactions.length > 0 && update.transactions.some((t) => !isReconcileTx(t))) {
+        if (
+          update.transactions.length > 0 &&
+          update.transactions.some(t => !isReconcileTx(t))
+        ) {
           queueMicrotask(() => {
             reconcile(handle, this._view)
-          });
+          })
         }
       }
 
       destroy() {
-        handle.addListener('change', this._handleChange);
+        handle.addListener("change", this._handleChange)
       }
 
       private _handleChange = () => {
         reconcile(handle, this._view)
-      };
-    },
-  );
+      }
+    }
+  )
 
   return {
     extension: [stateField, semaphoreFacet.of(semaphore), viewPlugin],
-  };
-};
+  }
+}
 
 const reconcile = (handle: IDocHandle, view: EditorView) => {
   const semaphore = view.state.facet<PatchSemaphore>(semaphoreFacet)
-  semaphore.reconcile(handle, view);
+  semaphore.reconcile(handle, view)
 }
 
-export const reconcileAnnotationType = Annotation.define<unknown>();
+export const reconcileAnnotationType = Annotation.define<unknown>()
 
-export const isReconcileTx = (tr: Transaction): boolean => !!tr.annotation(reconcileAnnotationType);
+export const isReconcileTx = (tr: Transaction): boolean =>
+  !!tr.annotation(reconcileAnnotationType)
 
 export const makeReconcile = (tr: TransactionSpec) => {
   if (tr.annotations != null) {
     if (tr.annotations instanceof Array) {
-      tr.annotations = [...tr.annotations, reconcileAnnotationType.of({})];
+      tr.annotations = [...tr.annotations, reconcileAnnotationType.of({})]
     } else {
-      tr.annotations = [tr.annotations, reconcileAnnotationType.of({})];
+      tr.annotations = [tr.annotations, reconcileAnnotationType.of({})]
     }
   } else {
-    tr.annotations = [reconcileAnnotationType.of({})];
+    tr.annotations = [reconcileAnnotationType.of({})]
   }
   // return {
   // ...tr,
   // annotations: reconcileAnnotationType.of({})
   // }
-};
+}

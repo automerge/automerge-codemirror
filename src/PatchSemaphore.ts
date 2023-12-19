@@ -1,69 +1,83 @@
-import { next as automerge } from '@automerge/automerge';
+import { next as automerge } from "@automerge/automerge"
 
-import amToCodemirror from './amToCodemirror';
-import codeMirrorToAm from './codeMirrorToAm';
-import { type IDocHandle } from './handle';
-import { type Field, isReconcileTx, getPath, reconcileAnnotationType, updateHeads, getLastHeads } from './plugin';
-import { type EditorView } from '@codemirror/view';
+import amToCodemirror from "./amToCodemirror"
+import codeMirrorToAm from "./codeMirrorToAm"
+import { type IDocHandle } from "./handle"
+import {
+  type Field,
+  isReconcileTx,
+  getPath,
+  reconcileAnnotationType,
+  updateHeads,
+  getLastHeads,
+} from "./plugin"
+import { type EditorView } from "@codemirror/view"
 
-type Doc<T> = automerge.Doc<T>;
-type Heads = automerge.Heads;
+type Doc<T> = automerge.Doc<T>
+type Heads = automerge.Heads
 
-type ChangeFn = (atHeads: Heads, change: (doc: Doc<unknown>) => void) => Heads | undefined;
+type ChangeFn = (
+  atHeads: Heads,
+  change: (doc: Doc<unknown>) => void
+) => Heads | undefined
 
 export class PatchSemaphore {
-  _field!: Field;
-  _inReconcile = false;
-  _queue: Array<ChangeFn> = [];
+  _field!: Field
+  _inReconcile = false
+  _queue: Array<ChangeFn> = []
 
   constructor(field?: Field) {
     if (field !== undefined) {
-      this._field = field;
+      this._field = field
     }
   }
 
   reconcile = (handle: IDocHandle, view: EditorView) => {
     if (this._inReconcile) {
-      return;
+      return
     }
-    this._inReconcile = true;
+    this._inReconcile = true
 
-    const path = getPath(view.state, this._field);
-    const oldHeads = getLastHeads(view.state, this._field);
-    let selection = view.state.selection;
+    const path = getPath(view.state, this._field)
+    const oldHeads = getLastHeads(view.state, this._field)
+    let selection = view.state.selection
 
-    const transactions = view.state.field(this._field).unreconciledTransactions.filter((tx) => !isReconcileTx(tx));
+    const transactions = view.state
+      .field(this._field)
+      .unreconciledTransactions.filter(tx => !isReconcileTx(tx))
 
     // First undo all the unreconciled transactions
-    const toInvert = transactions.slice().reverse();
+    const toInvert = transactions.slice().reverse()
     for (const tx of toInvert) {
-      const inverted = tx.changes.invert(tx.startState.doc);
-      selection = selection.map(inverted);
+      const inverted = tx.changes.invert(tx.startState.doc)
+      selection = selection.map(inverted)
       view.dispatch({
         changes: inverted,
         annotations: reconcileAnnotationType.of(true),
-      });
+      })
     }
 
     // now apply the unreconciled transactions to the document
-    let newHeads = codeMirrorToAm(this._field, handle, transactions, view.state);
+    let newHeads = codeMirrorToAm(this._field, handle, transactions, view.state)
 
     // NOTE: null and undefined each come from automerge and repo respectively
     if (newHeads === null || newHeads === undefined) {
       // TODO: @alexjg this is the call that's resetting the editor state on click
-      newHeads = automerge.getHeads(handle.docSync()!);
+      newHeads = automerge.getHeads(handle.docSync()!)
     }
 
     // now get the diff between the updated state of the document and the heads
     // and apply that to the codemirror doc
-    const diff = automerge.equals(oldHeads, newHeads) ? [] : automerge.diff(handle.docSync()!, oldHeads, newHeads);
-    amToCodemirror(view, selection, path, diff);
+    const diff = automerge.equals(oldHeads, newHeads)
+      ? []
+      : automerge.diff(handle.docSync()!, oldHeads, newHeads)
+    amToCodemirror(view, selection, path, diff)
 
     view.dispatch({
       effects: updateHeads(newHeads),
       annotations: reconcileAnnotationType.of({}),
-    });
+    })
 
-    this._inReconcile = false;
-  };
+    this._inReconcile = false
+  }
 }

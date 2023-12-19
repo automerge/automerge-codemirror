@@ -1,37 +1,49 @@
-import { type EditorState, type Text, type Transaction } from '@codemirror/state';
+import {
+  type EditorState,
+  type Text,
+  type Transaction,
+} from "@codemirror/state"
 
-import { next as am, type Heads } from '@automerge/automerge';
+import { next as am, type Heads } from "@automerge/automerge"
 
-import { type IDocHandle } from './handle';
-import { type Field } from './plugin';
+import { type IDocHandle } from "./handle"
+import { type Field } from "./plugin"
 
 export default (
   field: Field,
   handle: IDocHandle,
   transactions: Transaction[],
-  state: EditorState,
+  state: EditorState
 ): Heads | undefined => {
-  const { lastHeads, path } = state.field(field);
+  const { lastHeads, path } = state.field(field)
 
   // We don't want to call `automerge.updateAt` if there are no changes.
   // Otherwise later on `automerge.diff` will return empty patches that result in a no-op but still mess up the selection.
-  let hasChanges = false;
+  let hasChanges = false
   for (const tr of transactions) {
     tr.changes.iterChanges(() => {
-      hasChanges = true;
-    });
+      hasChanges = true
+    })
   }
 
   if (!hasChanges) {
-    return undefined;
+    return undefined
   }
 
   const newHeads = handle.changeAt(lastHeads, (doc: am.Doc<unknown>) => {
     for (const tr of transactions) {
-      tr.changes.iterChanges((fromA: number, toA: number, _fromB: number, _toB: number, inserted: Text) => {
-        am.splice(doc, path, fromA, toA - fromA, inserted.toString());
-      });
+      tr.changes.iterChanges(
+        (
+          fromA: number,
+          toA: number,
+          _fromB: number,
+          _toB: number,
+          inserted: Text
+        ) => {
+          am.splice(doc, path, fromA, toA - fromA, inserted.toString())
+        }
+      )
     }
-  });
-  return newHeads ?? undefined;
-};
+  })
+  return newHeads ?? undefined
+}
