@@ -21,9 +21,11 @@ export default (
   // Otherwise later on `automerge.diff` will return empty patches that result in a no-op but still mess up the selection.
   let hasChanges = false
   for (const tr of transactions) {
-    tr.changes.iterChanges(() => {
-      hasChanges = true
-    })
+    if(!tr.changes.empty) {
+      tr.changes.iterChanges(() => {
+        hasChanges = true
+      })
+    }
   }
 
   if (!hasChanges) {
