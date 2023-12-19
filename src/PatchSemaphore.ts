@@ -22,14 +22,12 @@ type ChangeFn = (
 ) => Heads | undefined
 
 export class PatchSemaphore {
-  _field!: Field
+  _field: Field
   _inReconcile = false
   _queue: Array<ChangeFn> = []
 
-  constructor(field?: Field) {
-    if (field !== undefined) {
-      this._field = field
-    }
+  constructor(field: Field) {
+    this._field = field
   }
 
   reconcile = (handle: IDocHandle, view: EditorView) => {
