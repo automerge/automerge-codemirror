@@ -1,26 +1,28 @@
 import {
-  DelPatch,
-  InsertPatch,
-  Patch,
-  Prop,
-  PutPatch,
-  SpliceTextPatch,
-} from "@automerge/automerge"
-import {
   ChangeSet,
-  ChangeSpec,
-  EditorSelection,
-  EditorState,
+  type ChangeSpec,
+  type EditorSelection,
+  type EditorState,
 } from "@codemirror/state"
-import { EditorView } from "@codemirror/view"
+import { type EditorView } from "@codemirror/view"
+
+import {
+  type DelPatch,
+  type InsertPatch,
+  type Patch,
+  type Prop,
+  type PutPatch,
+  type SpliceTextPatch,
+} from "@automerge/automerge"
+
 import { reconcileAnnotationType } from "./plugin"
 
-export default function (
+export default (
   view: EditorView,
   selection: EditorSelection,
   target: Prop[],
   patches: Patch[]
-) {
+) => {
   for (const patch of patches) {
     const changeSpec = handlePatch(patch, target, view.state)
     if (changeSpec != null) {
@@ -38,11 +40,11 @@ export default function (
   })
 }
 
-function handlePatch(
+const handlePatch = (
   patch: Patch,
   target: Prop[],
   state: EditorState
-): ChangeSpec | null {
+): ChangeSpec | null => {
   if (patch.action === "insert") {
     return handleInsert(target, patch)
   } else if (patch.action === "splice") {
@@ -56,7 +58,10 @@ function handlePatch(
   }
 }
 
-function handleInsert(target: Prop[], patch: InsertPatch): Array<ChangeSpec> {
+const handleInsert = (
+  target: Prop[],
+  patch: InsertPatch
+): Array<ChangeSpec> => {
   const index = charPath(target, patch.path)
   if (index == null) {
     return []
@@ -65,10 +70,10 @@ function handleInsert(target: Prop[], patch: InsertPatch): Array<ChangeSpec> {
   return [{ from: index, to: index, insert: text }]
 }
 
-function handleSplice(
+const handleSplice = (
   target: Prop[],
   patch: SpliceTextPatch
-): Array<ChangeSpec> {
+): Array<ChangeSpec> => {
   const index = charPath(target, patch.path)
   if (index == null) {
     return []
@@ -76,7 +81,7 @@ function handleSplice(
   return [{ from: index, insert: patch.value }]
 }
 
-function handleDel(target: Prop[], patch: DelPatch): Array<ChangeSpec> {
+const handleDel = (target: Prop[], patch: DelPatch): Array<ChangeSpec> => {
   const index = charPath(target, patch.path)
   if (index == null) {
     return []
@@ -85,11 +90,11 @@ function handleDel(target: Prop[], patch: DelPatch): Array<ChangeSpec> {
   return [{ from: index, to: index + length }]
 }
 
-function handlePut(
+const handlePut = (
   target: Prop[],
   patch: PutPatch,
   state: EditorState
-): Array<ChangeSpec> {
+): Array<ChangeSpec> => {
   const index = charPath(target, [...patch.path, 0])
   if (index == null) {
     return []
@@ -103,12 +108,18 @@ function handlePut(
 
 // If the path of the patch is of the form [path, <index>] then we know this is
 // a path to a character within the sequence given by path
-function charPath(textPath: Prop[], candidatePath: Prop[]): number | null {
-  if (candidatePath.length !== textPath.length + 1) return null
+const charPath = (textPath: Prop[], candidatePath: Prop[]): number | null => {
+  if (candidatePath.length !== textPath.length + 1) {
+    return null
+  }
   for (let i = 0; i < textPath.length; i++) {
-    if (textPath[i] !== candidatePath[i]) return null
+    if (textPath[i] !== candidatePath[i]) {
+      return null
+    }
   }
   const index = candidatePath[candidatePath.length - 1]
-  if (typeof index === "number") return index
+  if (typeof index === "number") {
+    return index
+  }
   return null
 }
