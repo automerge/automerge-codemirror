@@ -78,6 +78,38 @@ describe("<Editor />", () => {
         assert.equal(doc.text, "Hello")
       })
     })
+
+    it("handles moving lines", () => {
+      const { handle } = makeHandle("Hello\nWorld")
+      mount(<Editor handle={handle} path={["text"]} />)
+      cy.get("div.cm-content").type("{ctrl+end}{alt+upArrow}")
+      cy.get("div.cm-content").should(
+        "have.html",
+        expectedHtml(["World", "Hello"], 1)
+      )
+      cy.wait(100).then(async () => {
+        const doc = await handle.doc()
+        assert.equal(doc.text, "World\nHello")
+      })
+    })
+
+    it("handles multiple cursors", () => {
+      const { handle } = makeHandle("Hello\nWorld\nThere!")
+      mount(<Editor handle={handle} path={["text"]} />)
+      cy.get("div.cm-content>.cm-line").eq(0).click()
+      cy.get("div.cm-content>.cm-line").eq(1).click({ ctrlKey: true })
+      cy.get("div.cm-content>.cm-line").eq(2).click({ ctrlKey: true })
+      cy.get("div.cm-content").type(" Lines{home}{shift+rightArrow}{del}")
+      cy.get("div.cm-content>.cm-line").eq(0).click()
+      cy.get("div.cm-content").should(
+        "have.html",
+        expectedHtml(["ello Lines", "orld Lines", "here! Lines"], 0)
+      )
+      cy.wait(100).then(async () => {
+        const doc = await handle.doc()
+        assert.equal(doc.text, "ello Lines\norld Lines\nhere! Lines")
+      })
+    })
   })
 
   describe("remote changes", () => {

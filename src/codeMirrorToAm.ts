@@ -37,11 +37,13 @@ export default function (
         (
           fromA: number,
           toA: number,
-          _fromB: number,
+          fromB: number,
           _toB: number,
           inserted: Text
         ) => {
-          am.splice(doc, path, fromA, toA - fromA, inserted.toString())
+          // We are cloning the path as `am.splice` calls `.unshift` on it, modifying it in place,
+          // causing the path to be broken on subsequent changes
+          am.splice(doc, path.slice(), fromB, toA - fromA, inserted.toString())
         }
       )
     }
