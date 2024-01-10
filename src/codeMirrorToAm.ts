@@ -1,19 +1,20 @@
-import { next as am } from "@automerge/automerge"
-import { Heads } from "@automerge/automerge"
-import { EditorState, Text, Transaction } from "@codemirror/state"
+import {
+  type EditorState,
+  type Text,
+  type Transaction,
+} from "@codemirror/state"
+
+import { next as am, type Heads } from "@automerge/automerge"
+
+import { type IDocHandle } from "./handle"
 import { type Field } from "./plugin"
 
-type Update = (
-  atHeads: Heads,
-  change: (doc: am.Doc<unknown>) => void
-) => Heads | undefined
-
-export default function (
+export default (
   field: Field,
-  update: Update,
+  handle: IDocHandle,
   transactions: Transaction[],
   state: EditorState
-): Heads | undefined {
+): Heads | undefined => {
   const { lastHeads, path } = state.field(field)
 
   // We don't want to call `automerge.updateAt` if there are no changes.
@@ -31,7 +32,7 @@ export default function (
     return undefined
   }
 
-  const newHeads = update(lastHeads, (doc: am.Doc<unknown>) => {
+  const newHeads = handle.changeAt(lastHeads, (doc: am.Doc<unknown>) => {
     for (const tr of transactions) {
       tr.changes.iterChanges(
         (
@@ -48,5 +49,5 @@ export default function (
       )
     }
   })
-  return newHeads
+  return newHeads ?? undefined
 }
