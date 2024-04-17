@@ -15,12 +15,13 @@ import {
 import { EditorView } from "@codemirror/view"
 import { reconcileAnnotationType } from "./plugin"
 
-export default function (
+export const applyAmPatchesToCm = (
   view: EditorView,
-  selection: EditorSelection,
   target: Prop[],
   patches: Patch[]
-) {
+) => {
+  let selection = view.state.selection
+
   for (const patch of patches) {
     const changeSpec = handlePatch(patch, target, view.state)
     if (changeSpec != null) {
