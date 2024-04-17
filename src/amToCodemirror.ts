@@ -6,12 +6,7 @@ import {
   PutPatch,
   SpliceTextPatch,
 } from "@automerge/automerge"
-import {
-  ChangeSet,
-  ChangeSpec,
-  EditorSelection,
-  EditorState,
-} from "@codemirror/state"
+import { ChangeSet, ChangeSpec, EditorState } from "@codemirror/state"
 import { EditorView } from "@codemirror/view"
 import { reconcileAnnotationType } from "./plugin"
 

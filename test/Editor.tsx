@@ -3,41 +3,33 @@ import React, { useEffect, useRef } from "react"
 import { EditorView } from "@codemirror/view"
 import { basicSetup } from "codemirror"
 import { Prop } from "@automerge/automerge"
-import { plugin as amgPlugin, PatchSemaphore } from "../src"
+import { automergeSyncPlugin } from "../src"
 import { type DocHandle } from "@automerge/automerge-repo"
 
 export type EditorProps = {
   handle: DocHandle<{ text: string }>
-  path: Prop[]
 }
 
-export function Editor({ handle, path }: EditorProps) {
+export function Editor({ handle }: EditorProps) {
   const containerRef = useRef(null)
   const editorRoot = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const doc = handle.docSync()
-    const source = doc.text // this should use path
-    const plugin = amgPlugin(doc, path)
-    const semaphore = new PatchSemaphore(plugin)
+    const source = doc!.text
     const view = (editorRoot.current = new EditorView({
       doc: source,
-      extensions: [basicSetup, plugin],
-      dispatch(transaction) {
-        view.update([transaction])
-        semaphore.reconcile(handle, view)
-      },
+      extensions: [
+        basicSetup,
+        automergeSyncPlugin({
+          handle,
+          path: ["text"],
+        }),
+      ],
       parent: containerRef.current,
     }))
 
-    const handleChange = ({ doc, patchInfo }) => {
-      semaphore.reconcile(handle, view)
-    }
-
-    handle.addListener("change", handleChange)
-
     return () => {
-      handle.removeListener("change", handleChange)
       view.destroy()
     }
   }, [])

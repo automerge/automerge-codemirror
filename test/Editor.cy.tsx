@@ -22,13 +22,13 @@ const makeHandle = (text: string) => {
 describe("<Editor />", () => {
   it("renders", () => {
     const { handle } = makeHandle("Hello World")
-    mount(<Editor handle={handle} path={["text"]} />)
+    mount(<Editor handle={handle} />)
     cy.get("div.cm-content").should("have.html", expectedHtml(["Hello World"]))
   })
 
   it("renders multiple lines", () => {
     const { handle } = makeHandle("Hello World\nGoodbye World")
-    mount(<Editor handle={handle} path={["text"]} />)
+    mount(<Editor handle={handle} />)
     cy.get("div.cm-content").should(
       "have.html",
       expectedHtml(["Hello World", "Goodbye World"])
@@ -38,7 +38,7 @@ describe("<Editor />", () => {
   describe("local edits", () => {
     it("handles local inserts", () => {
       const { handle } = makeHandle("Hello World")
-      mount(<Editor handle={handle} path={["text"]} />)
+      mount(<Editor handle={handle} />)
       cy.get("div.cm-content").type("!")
       cy.get("div.cm-content").should(
         "have.html",
@@ -46,20 +46,20 @@ describe("<Editor />", () => {
       )
       cy.wait(100).then(async () => {
         const doc = await handle.doc()
-        assert.equal(doc.text, "Hello World!")
+        assert.equal(doc!.text, "Hello World!")
       })
     })
 
     it("allows inserting multiple blank lines", () => {
       const { handle } = makeHandle("Hello World!")
-      mount(<Editor handle={handle} path={["text"]} />)
+      mount(<Editor handle={handle} />)
 
       cy.wait(1000).then(() => {
         cy.get("div.cm-content").type("{enter}{enter}{backspace}{enter}.")
 
         cy.wait(100).then(async () => {
           const doc = await handle.doc()
-          assert.equal(doc.text, "Hello World!\n\n.")
+          assert.equal(doc!.text, "Hello World!\n\n.")
           cy.get("div.cm-content").should(
             "have.html",
             expectedHtml(["Hello World!", "", "."], 2)
@@ -70,18 +70,18 @@ describe("<Editor />", () => {
 
     it("handles inserting when the initial document is blank", () => {
       const { handle } = makeHandle("")
-      mount(<Editor handle={handle} path={["text"]} />)
+      mount(<Editor handle={handle} />)
       cy.get("div.cm-content").type("{backspace}Hello")
       cy.get("div.cm-content").should("have.html", expectedHtml(["Hello"]))
       cy.wait(100).then(async () => {
         const doc = await handle.doc()
-        assert.equal(doc.text, "Hello")
+        assert.equal(doc!.text, "Hello")
       })
     })
 
     it("handles moving lines", () => {
       const { handle } = makeHandle("Hello\nWorld")
-      mount(<Editor handle={handle} path={["text"]} />)
+      mount(<Editor handle={handle} />)
       cy.get("div.cm-content").type("{ctrl+end}{alt+upArrow}")
       cy.get("div.cm-content").should(
         "have.html",
@@ -89,13 +89,13 @@ describe("<Editor />", () => {
       )
       cy.wait(100).then(async () => {
         const doc = await handle.doc()
-        assert.equal(doc.text, "World\nHello")
+        assert.equal(doc!.text, "World\nHello")
       })
     })
 
     it("handles multiple cursors", () => {
       const { handle } = makeHandle("Hello\nWorld\nThere!")
-      mount(<Editor handle={handle} path={["text"]} />)
+      mount(<Editor handle={handle} />)
       cy.get("div.cm-content>.cm-line").eq(0).click()
       cy.get("div.cm-content>.cm-line").eq(1).click({ ctrlKey: true })
       cy.get("div.cm-content>.cm-line").eq(2).click({ ctrlKey: true })
@@ -107,7 +107,7 @@ describe("<Editor />", () => {
       )
       cy.wait(100).then(async () => {
         const doc = await handle.doc()
-        assert.equal(doc.text, "ello Lines\norld Lines\nhere! Lines")
+        assert.equal(doc!.text, "ello Lines\norld Lines\nhere! Lines")
       })
     })
   })
@@ -115,7 +115,7 @@ describe("<Editor />", () => {
   describe("remote changes", () => {
     it("should incorporate inserts from remotes", () => {
       const { handle } = makeHandle("Hello World!")
-      mount(<Editor handle={handle} path={["text"]} />)
+      mount(<Editor handle={handle} />)
       cy.wait(100)
         .then(() => {
           handle.change(d => {
@@ -132,7 +132,7 @@ describe("<Editor />", () => {
 
     it("handles simultaneous remote and local changes", () => {
       const { handle, repo } = makeHandle("Hello World!")
-      mount(<Editor handle={handle} path={["text"]} />)
+      mount(<Editor handle={handle} />)
 
       // Create a local change
       cy.get("div.cm-content")
