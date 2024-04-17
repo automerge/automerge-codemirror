@@ -1,15 +1,14 @@
 import { next as A } from "@automerge/automerge"
 import { DocHandle } from "@automerge/automerge-repo"
-import { next as am } from "@automerge/automerge"
 import { Heads } from "@automerge/automerge"
 import { EditorState, Text, Transaction } from "@codemirror/state"
 import { isReconcileTx, type Field } from "./plugin"
 
 export const applyCmTransactionToAmHandle = (
   handle: DocHandle<unknown>,
-  path: am.Prop[],
+  path: A.Prop[],
   transaction: Transaction
-) => {
+): A.Heads | undefined => {
   if (isReconcileTx(transaction)) {
     return
   }
@@ -27,7 +26,7 @@ export const applyCmTransactionToAmHandle = (
     return undefined
   }
 
-  handle.change((doc: am.Doc<unknown>) => {
+  handle.change((doc: A.Doc<unknown>) => {
     transaction.changes.iterChanges(
       (
         fromA: number,
@@ -38,10 +37,10 @@ export const applyCmTransactionToAmHandle = (
       ) => {
         // We are cloning the path as `am.splice` calls `.unshift` on it, modifying it in place,
         // causing the path to be broken on subsequent changes
-        am.splice(doc, path.slice(), fromB, toA - fromA, inserted.toString())
+        A.splice(doc, path.slice(), fromB, toA - fromA, inserted.toString())
       }
     )
   })
 
-  return am.getHeads(handle.docSync())
+  return A.getHeads(handle.docSync())
 }

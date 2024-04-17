@@ -20,13 +20,14 @@ interface PatchSemaphoreConfig {
 }
 
 export class PatchSemaphore {
-  _inReconcile = false
   _queue: Array<ChangeFn> = []
 
   private reconciledHeads: A.Heads
   private handle: DocHandle<any>
   private view: EditorView
   private path: A.Prop[]
+
+  private processingTransaction = false
 
   constructor({ handle, view, path }: PatchSemaphoreConfig) {
     this.handle = handle
@@ -36,6 +37,8 @@ export class PatchSemaphore {
   }
 
   intercept = (transaction: Transaction) => {
+    this.processingTransaction = true
+
     const newHeads = applyCmTransactionToAmHandle(
       this.handle,
       this.path,
@@ -45,27 +48,27 @@ export class PatchSemaphore {
     if (newHeads) {
       this.reconciledHeads = newHeads
     }
+
+    this.processingTransaction = false
   }
 
   reconcile = (handle: DocHandle<unknown>, view: EditorView) => {
-    setTimeout(() => {
-      const currentHeads = A.getHeads(handle.docSync())
+    if (this.processingTransaction) {
+      return
+    }
 
-      if (A.equals(currentHeads, this.reconciledHeads)) {
-        return
-      }
+    const currentHeads = A.getHeads(handle.docSync())
 
-      // get the diff between the updated state of the document and the heads
-      // and apply that to the codemirror doc
-      const patches = A.diff(
-        handle.docSync(),
-        this.reconciledHeads,
-        currentHeads
-      )
+    if (A.equals(currentHeads, this.reconciledHeads)) {
+      return
+    }
 
-      applyAmPatchesToCm(view, this.path, patches)
+    // get the diff between the updated state of the document and the heads
+    // and apply that to the codemirror doc
+    const patches = A.diff(handle.docSync(), this.reconciledHeads, currentHeads)
 
-      this.reconciledHeads = currentHeads
-    })
+    applyAmPatchesToCm(view, this.path, patches)
+
+    this.reconciledHeads = currentHeads
   }
 }
