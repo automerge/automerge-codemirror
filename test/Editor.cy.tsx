@@ -19,6 +19,12 @@ const makeHandle = (text: string) => {
   return { handle, repo }
 }
 
+const IS_MAC_OS = Cypress.platform === "darwin"
+
+const WITH_COMMAND_KEY_PRESSED = IS_MAC_OS
+  ? { cmdKey: true }
+  : { ctrlKey: true }
+
 describe("<Editor />", () => {
   it("renders", () => {
     const { handle } = makeHandle("Hello World")
@@ -82,7 +88,7 @@ describe("<Editor />", () => {
     it("handles moving lines", () => {
       const { handle } = makeHandle("Hello\nWorld")
       mount(<Editor handle={handle} />)
-      cy.get("div.cm-content").type("{ctrl+end}{alt+upArrow}")
+      cy.get("div.cm-content").type("{alt+downArrow}")
       cy.get("div.cm-content").should(
         "have.html",
         expectedHtml(["World", "Hello"], 1)
@@ -97,8 +103,8 @@ describe("<Editor />", () => {
       const { handle } = makeHandle("Hello\nWorld\nThere!")
       mount(<Editor handle={handle} />)
       cy.get("div.cm-content>.cm-line").eq(0).click()
-      cy.get("div.cm-content>.cm-line").eq(1).click({ ctrlKey: true })
-      cy.get("div.cm-content>.cm-line").eq(2).click({ ctrlKey: true })
+      cy.get("div.cm-content>.cm-line").eq(1).click(WITH_COMMAND_KEY_PRESSED)
+      cy.get("div.cm-content>.cm-line").eq(2).click(WITH_COMMAND_KEY_PRESSED)
       cy.get("div.cm-content").type(" Lines{home}{shift+rightArrow}{del}")
       cy.get("div.cm-content>.cm-line").eq(0).click()
       cy.get("div.cm-content").should(
