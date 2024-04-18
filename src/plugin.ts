@@ -24,13 +24,12 @@ export const automergeSyncPlugin = ({
   let reconciledHeads = A.getHeads(handle.docSync())
 
   const onChange = () => {
-    // ignore changes that where triggered during a
+    // ignore changes that where triggered while processing a codemirror transaction
     if (isProcessingCmTransaction) {
       return
     }
 
     const currentHeads = A.getHeads(handle.docSync())
-
     if (A.equals(currentHeads, reconciledHeads)) {
       return
     }
@@ -50,7 +49,8 @@ export const automergeSyncPlugin = ({
       }
 
       update(update: ViewUpdate) {
-        // start pr
+        // start processing codemirror transaction
+        // changes that are created through the transaction are ignored in the change listener on the handle
         isProcessingCmTransaction = true
 
         const newHeads = applyCmTransactionsToAmHandle(
@@ -63,6 +63,7 @@ export const automergeSyncPlugin = ({
           reconciledHeads = newHeads
         }
 
+        // finish processing transaction
         isProcessingCmTransaction = false
       }
 
