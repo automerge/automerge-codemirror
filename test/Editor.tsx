@@ -2,7 +2,6 @@ import React, { useEffect, useRef } from "react"
 
 import { EditorView } from "@codemirror/view"
 import { basicSetup } from "codemirror"
-import { Prop } from "@automerge/automerge"
 import { automergeSyncPlugin } from "../src"
 import { type DocHandle } from "@automerge/automerge-repo"
 
