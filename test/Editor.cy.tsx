@@ -25,6 +25,8 @@ const WITH_COMMAND_KEY_PRESSED = IS_MAC_OS
   ? { cmdKey: true }
   : { ctrlKey: true }
 
+const CMD = IS_MAC_OS ? "cmd" : "ctrl"
+
 describe("<Editor />", () => {
   it("renders", () => {
     const { handle } = makeHandle("Hello World")
@@ -182,6 +184,136 @@ describe("<Editor />", () => {
             expectedHtml(["Hello hello Happy World!!"])
           )
         })
+    })
+  })
+
+  describe("history", () => {
+    it("should undo changes made through the editor", () => {
+      const { handle } = makeHandle("Hello World!")
+      mount(<Editor handle={handle} />)
+
+      cy.wait(100).then(() => {
+        cy.get("div.cm-content").click()
+        cy.get("div.cm-content").type(" You there?")
+
+        cy.get("div.cm-content").should(
+          "have.html",
+          expectedHtml(["Hello World! You there?"])
+        )
+
+        cy.get("div.cm-content").type(`{${CMD}+z}`)
+
+        cy.get("div.cm-content").should(
+          "have.html",
+          expectedHtml(["Hello World!"])
+        )
+      })
+    })
+
+    it("should undo changes made through automerge", () => {
+      const { handle } = makeHandle("Hello World!")
+      mount(<Editor handle={handle} />)
+
+      cy.wait(100).then(() => {
+        handle.change(d => {
+          automerge.splice(d, ["text"], 5, 0, " Happy")
+        })
+
+        cy.get("div.cm-content").should(
+          "have.html",
+          expectedHtml(["Hello Happy World!"])
+        )
+
+        cy.get("div.cm-content").type(`{${CMD}+z}`)
+
+        cy.get("div.cm-content").should(
+          "have.html",
+          expectedHtml(["Hello World!"])
+        )
+      })
+    })
+
+    it("should redo undone changes", () => {
+      const { handle } = makeHandle("Hello World!")
+      mount(<Editor handle={handle} />)
+
+      cy.wait(100).then(() => {
+        cy.get("div.cm-content").click()
+        cy.get("div.cm-content").type(" You there?")
+
+        cy.get("div.cm-content").should(
+          "have.html",
+          expectedHtml(["Hello World! You there?"])
+        )
+
+        cy.get("div.cm-content").type(`{${CMD}+z}`)
+
+        cy.get("div.cm-content").should(
+          "have.html",
+          expectedHtml(["Hello World!"])
+        )
+
+        cy.get("div.cm-content").type(`{${CMD}+shift+z}`)
+
+        cy.get("div.cm-content").should(
+          "have.html",
+          expectedHtml(["Hello World! You there?"])
+        )
+      })
+    })
+
+    it.only("should redo undo multiple changes", () => {
+      const { handle } = makeHandle("")
+      mount(<Editor handle={handle} />)
+
+      cy.wait(100).then(() => {
+        cy.get("div.cm-content").click()
+        cy.get("div.cm-content").type("You there?\nIn the mirror\nlooking back")
+
+        cy.get("div.cm-content").should(
+          "have.html",
+          expectedHtml(["You there?", "In the mirror", "looking back"], 2)
+        )
+
+        cy.get("div.cm-content").type(`{${CMD}+z}`)
+        cy.get("div.cm-content").should(
+          "have.html",
+          expectedHtml(["You there?", "In the mirror"], 1)
+        )
+
+        cy.get("div.cm-content").type(`{${CMD}+z}`)
+        cy.get("div.cm-content").should(
+          "have.html",
+          expectedHtml(["You there?"])
+        )
+
+        cy.get("div.cm-content").type(`{${CMD}+z}`)
+        cy.get("div.cm-content").should("have.html", expectedHtml([""]))
+
+        cy.get("div.cm-content").type(`{${CMD}+shift+z}`)
+        cy.get("div.cm-content").should(
+          "have.html",
+          expectedHtml(["You there?"])
+        )
+
+        cy.get("div.cm-content").type(`{${CMD}+shift+z}`)
+        cy.get("div.cm-content").should(
+          "have.html",
+          expectedHtml(["You there?", "In the mirror"], 1)
+        )
+
+        cy.get("div.cm-content").type(" of code")
+        cy.get("div.cm-content").should(
+          "have.html",
+          expectedHtml(["You there?", "In the mirror of code"], 1)
+        )
+
+        cy.get("div.cm-content").type(`{${CMD}+shift+z}`)
+        cy.get("div.cm-content").should(
+          "have.html",
+          expectedHtml(["You there?", "In the mirror of code"], 1)
+        )
+      })
     })
   })
 })
