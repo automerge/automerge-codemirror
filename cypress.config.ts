@@ -4,7 +4,7 @@ import wasm from "vite-plugin-wasm"
 import topLevelAwait from "vite-plugin-top-level-await"
 
 export default defineConfig({
-  projectId: 'ckcmw7',
+  projectId: "ckcmw7",
   component: {
     devServer: {
       framework: "react",
