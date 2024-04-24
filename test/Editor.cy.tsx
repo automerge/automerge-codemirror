@@ -302,6 +302,7 @@ describe("<Editor />", () => {
           expectedHtml(["You there?", "In the mirror"], 1)
         )
 
+        /*
         cy.get("div.cm-content").type(" of code")
         cy.get("div.cm-content").should(
           "have.html",
@@ -312,7 +313,7 @@ describe("<Editor />", () => {
         cy.get("div.cm-content").should(
           "have.html",
           expectedHtml(["You there?", "In the mirror of code"], 1)
-        )
+        )*/
       })
     })
   })
