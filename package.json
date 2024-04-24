@@ -23,6 +23,7 @@
   "devDependencies": {
     "@automerge/automerge-repo": "^1.0.19",
     "@cypress/react18": "^2.0.0",
+    "@types/react": "^18.2.79",
     "@typescript-eslint/eslint-plugin": "^5.60.0",
     "@typescript-eslint/parser": "^5.60.0",
     "@vitejs/plugin-react": "^4.0.0",

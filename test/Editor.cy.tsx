@@ -275,45 +275,44 @@ describe("<Editor />", () => {
           expectedHtml(["You there?", "In the mirror", "looking back"], 2)
         )
 
-        cy.get("div.cm-content").type(`{${CMD}+z}`)
+        triggerUndo()
         cy.get("div.cm-content").should(
           "have.html",
           expectedHtml(["You there?", "In the mirror"], 1)
         )
 
-        cy.get("div.cm-content").type(`{${CMD}+z}`)
+        triggerUndo()
         cy.get("div.cm-content").should(
           "have.html",
           expectedHtml(["You there?"])
         )
 
-        cy.get("div.cm-content").type(`{${CMD}+z}`)
+        triggerUndo()
         cy.get("div.cm-content").should("have.html", expectedHtml([""]))
 
-        cy.get("div.cm-content").type(`{${CMD}+shift+z}`)
+        triggerRedo()
         cy.get("div.cm-content").should(
           "have.html",
           expectedHtml(["You there?"])
         )
 
-        cy.get("div.cm-content").type(`{${CMD}+shift+z}`)
+        triggerRedo()
         cy.get("div.cm-content").should(
           "have.html",
           expectedHtml(["You there?", "In the mirror"], 1)
         )
 
-        /*
-        cy.get("div.cm-content").type(" of code")
+        cy.get("div.cm-content").type("!")
         cy.get("div.cm-content").should(
           "have.html",
-          expectedHtml(["You there?", "In the mirror of code"], 1)
+          expectedHtml(["You there?!", "In the mirror"], 0)
         )
 
-        cy.get("div.cm-content").type(`{${CMD}+shift+z}`)
+        triggerRedo()
         cy.get("div.cm-content").should(
           "have.html",
-          expectedHtml(["You there?", "In the mirror of code"], 1)
-        )*/
+          expectedHtml(["You there?!", "In the mirror"], 0)
+        )
       })
     })
   })
@@ -330,4 +329,15 @@ function expectedHtml(lines: string[], activeIndex = 0): string {
       return `<div class="${active}cm-line">${lineHtml}</div>`
     })
     .join("")
+}
+
+// We are using buttons to trigger undo and redo instead of keyboard shortcuts
+// because the undo/redo keyboard shortcuts have inconsistent behaviour across platforms
+
+function triggerUndo() {
+  cy.get("button#undo").click()
+}
+
+function triggerRedo() {
+  cy.get("button#redo").click()
 }
