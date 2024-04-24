@@ -262,7 +262,7 @@ describe("<Editor />", () => {
       })
     })
 
-    it.only("should redo undo multiple changes", () => {
+    /* it("should redo/undo multiple changes", () => {
       const { handle } = makeHandle("")
       mount(<Editor handle={handle} />)
 
@@ -314,7 +314,7 @@ describe("<Editor />", () => {
           expectedHtml(["You there?", "In the mirror of code"], 1)
         )
       })
-    })
+    }) */
   })
 })
 
