@@ -19,39 +19,29 @@ export const automergeSyncPlugin = ({
   handle,
   path,
 }: AutomergeSyncPluginConfig) => {
-  let view: EditorView
-  let isProcessingCmTransaction = false
-  let reconciledHeads = A.getHeads(handle.docSync())
-
-  const onChange = () => {
-    // ignore changes that where triggered while processing a codemirror transaction
-    if (isProcessingCmTransaction) {
-      return
-    }
-
-    const currentHeads = A.getHeads(handle.docSync())
-    if (A.equals(currentHeads, reconciledHeads)) {
-      return
-    }
-
-    // get the diff between the reconciled heads and the new heads
-    // and apply that to the codemirror doc
-    const patches = A.diff(handle.docSync(), reconciledHeads, currentHeads)
-    applyAmPatchesToCm(view, path, patches)
-    reconciledHeads = currentHeads
+  if (!handle.isReady) {
+    throw new Error(
+      "ensure the handle is ready before initializing the automergeSyncPlugin"
+    )
   }
 
   return ViewPlugin.fromClass(
     class {
-      constructor(v: EditorView) {
-        view = v
-        handle.on("change", onChange)
+      view: EditorView
+      reconciledHeads = A.getHeads(handle.docSync())
+      isProcessingCmTransaction = false
+
+      constructor(view: EditorView) {
+        this.view = view
+
+        this.onChange = this.onChange.bind(this)
+        handle.on("change", this.onChange)
       }
 
       update(update: ViewUpdate) {
         // start processing codemirror transaction
         // changes that are created through the transaction are ignored in the change listener on the handle
-        isProcessingCmTransaction = true
+        this.isProcessingCmTransaction = true
 
         const newHeads = applyCmTransactionsToAmHandle(
           handle,
@@ -60,15 +50,37 @@ export const automergeSyncPlugin = ({
         )
 
         if (newHeads) {
-          reconciledHeads = newHeads
+          this.reconciledHeads = newHeads
         }
 
         // finish processing transaction
-        isProcessingCmTransaction = false
+        this.isProcessingCmTransaction = false
+      }
+
+      onChange = () => {
+        // ignore changes that where triggered while processing a codemirror transaction
+        if (this.isProcessingCmTransaction) {
+          return
+        }
+
+        const currentHeads = A.getHeads(handle.docSync())
+        if (A.equals(currentHeads, this.reconciledHeads)) {
+          return
+        }
+
+        // get the diff between the reconciled heads and the new heads
+        // and apply that to the codemirror doc
+        const patches = A.diff(
+          handle.docSync(),
+          this.reconciledHeads,
+          currentHeads
+        )
+        applyAmPatchesToCm(this.view, path, patches)
+        this.reconciledHeads = currentHeads
       }
 
       destroy() {
-        handle.off("change", onChange)
+        handle.off("change", this.onChange)
       }
     }
   )
