@@ -52,7 +52,7 @@ describe("<Editor />", () => {
         "have.html",
         expectedHtml(["Hello World!"])
       )
-      cy.wait(100).then(async () => {
+      cy.wait(0).then(async () => {
         const doc = await handle.doc()
         assert.equal(doc!.text, "Hello World!")
       })
@@ -62,10 +62,10 @@ describe("<Editor />", () => {
       const { handle } = makeHandle("Hello World!")
       mount(<Editor handle={handle} />)
 
-      cy.wait(1000).then(() => {
+      cy.wait(0).then(() => {
         cy.get("div.cm-content").type("{enter}{enter}{backspace}{enter}.")
 
-        cy.wait(100).then(async () => {
+        cy.wait(0).then(async () => {
           const doc = await handle.doc()
           assert.equal(doc!.text, "Hello World!\n\n.")
           cy.get("div.cm-content").should(
@@ -81,7 +81,7 @@ describe("<Editor />", () => {
       mount(<Editor handle={handle} />)
       cy.get("div.cm-content").type("{backspace}Hello")
       cy.get("div.cm-content").should("have.html", expectedHtml(["Hello"]))
-      cy.wait(100).then(async () => {
+      cy.wait(0).then(async () => {
         const doc = await handle.doc()
         assert.equal(doc!.text, "Hello")
       })
@@ -95,7 +95,7 @@ describe("<Editor />", () => {
         "have.html",
         expectedHtml(["World", "Hello"], 1)
       )
-      cy.wait(100).then(async () => {
+      cy.wait(0).then(async () => {
         const doc = await handle.doc()
         assert.equal(doc!.text, "World\nHello")
       })
@@ -113,7 +113,7 @@ describe("<Editor />", () => {
         "have.html",
         expectedHtml(["ello Lines", "orld Lines", "here! Lines"], 0)
       )
-      cy.wait(100).then(async () => {
+      cy.wait(0).then(async () => {
         const doc = await handle.doc()
         assert.equal(doc!.text, "ello Lines\norld Lines\nhere! Lines")
       })
@@ -124,7 +124,7 @@ describe("<Editor />", () => {
     it("should incorporate inserts from remotes", () => {
       const { handle } = makeHandle("Hello World!")
       mount(<Editor handle={handle} />)
-      cy.wait(100)
+      cy.wait(0)
         .then(() => {
           handle.change(d => {
             automerge.splice(d, ["text"], 5, 0, " Happy")
@@ -154,7 +154,7 @@ describe("<Editor />", () => {
 
       let branch
       // create a remote change then merge it in
-      cy.wait(100)
+      cy.wait(0)
         .then(async () => {
           branch = repo.clone(handle)
           branch.change(d => {
@@ -162,7 +162,7 @@ describe("<Editor />", () => {
           })
           handle.merge(branch)
         })
-        .wait(100)
+        .wait(0)
         .then(() => {
           cy.get("div.cm-content").should(
             "have.html",
@@ -171,7 +171,7 @@ describe("<Editor />", () => {
         })
 
       // Now create another remote change and receive that
-      cy.wait(100)
+      cy.wait(0)
         .then(() => {
           branch.change(branch, d => {
             automerge.splice(d, ["text"], 5, 0, " hello")
@@ -192,7 +192,7 @@ describe("<Editor />", () => {
       const { handle } = makeHandle("Hello World!")
       mount(<Editor handle={handle} />)
 
-      cy.wait(100).then(() => {
+      cy.wait(0).then(() => {
         cy.get("div.cm-content").click()
         cy.get("div.cm-content").type(" You there?")
 
@@ -201,12 +201,21 @@ describe("<Editor />", () => {
           expectedHtml(["Hello World! You there?"])
         )
 
-        cy.get("div.cm-content").type(`{${CMD}+z}`)
+        cy.wait(0).then(async () => {
+          const doc = await handle.doc()
+          assert.equal(doc!.text, "Hello World! You there?")
+        })
 
+        triggerUndo()
         cy.get("div.cm-content").should(
           "have.html",
           expectedHtml(["Hello World!"])
         )
+
+        cy.wait(0).then(async () => {
+          const doc = await handle.doc()
+          assert.equal(doc!.text, "Hello World!")
+        })
       })
     })
 
@@ -214,7 +223,7 @@ describe("<Editor />", () => {
       const { handle } = makeHandle("Hello World!")
       mount(<Editor handle={handle} />)
 
-      cy.wait(100).then(() => {
+      cy.wait(0).then(() => {
         handle.change(d => {
           automerge.splice(d, ["text"], 5, 0, " Happy")
         })
@@ -224,12 +233,21 @@ describe("<Editor />", () => {
           expectedHtml(["Hello Happy World!"])
         )
 
-        cy.get("div.cm-content").type(`{${CMD}+z}`)
+        cy.wait(0).then(async () => {
+          const doc = await handle.doc()
+          assert.equal(doc!.text, "Hello Happy World!")
+        })
 
+        triggerUndo()
         cy.get("div.cm-content").should(
           "have.html",
           expectedHtml(["Hello World!"])
         )
+
+        cy.wait(0).then(async () => {
+          const doc = await handle.doc()
+          assert.equal(doc!.text, "Hello World!")
+        })
       })
     })
 
@@ -237,7 +255,7 @@ describe("<Editor />", () => {
       const { handle } = makeHandle("Hello World!")
       mount(<Editor handle={handle} />)
 
-      cy.wait(100).then(() => {
+      cy.wait(0).then(() => {
         cy.get("div.cm-content").click()
         cy.get("div.cm-content").type(" You there?")
 
@@ -245,20 +263,32 @@ describe("<Editor />", () => {
           "have.html",
           expectedHtml(["Hello World! You there?"])
         )
+        cy.wait(0).then(async () => {
+          const doc = await handle.doc()
+          assert.equal(doc!.text, "Hello World! You there?")
+        })
 
-        cy.get("div.cm-content").type(`{${CMD}+z}`)
+        triggerUndo()
 
         cy.get("div.cm-content").should(
           "have.html",
           expectedHtml(["Hello World!"])
         )
+        cy.wait(0).then(async () => {
+          const doc = await handle.doc()
+          assert.equal(doc!.text, "Hello World!")
+        })
 
-        cy.get("div.cm-content").type(`{${CMD}+shift+z}`)
+        triggerRedo()
 
         cy.get("div.cm-content").should(
           "have.html",
           expectedHtml(["Hello World! You there?"])
         )
+        cy.wait(0).then(async () => {
+          const doc = await handle.doc()
+          assert.equal(doc!.text, "Hello World! You there?")
+        })
       })
     })
 
@@ -266,7 +296,7 @@ describe("<Editor />", () => {
       const { handle } = makeHandle("")
       mount(<Editor handle={handle} />)
 
-      cy.wait(100).then(() => {
+      cy.wait(0).then(() => {
         cy.get("div.cm-content").click()
         cy.get("div.cm-content").type("You there?\nIn the mirror\nlooking back")
 
@@ -274,45 +304,84 @@ describe("<Editor />", () => {
           "have.html",
           expectedHtml(["You there?", "In the mirror", "looking back"], 2)
         )
+        cy.wait(0).then(async () => {
+          const doc = await handle.doc()
+          assert.equal(doc!.text, "You there?\nIn the mirror\nlooking back")
+        })
 
         triggerUndo()
+
         cy.get("div.cm-content").should(
           "have.html",
           expectedHtml(["You there?", "In the mirror"], 1)
         )
+        cy.wait(0).then(async () => {
+          const doc = await handle.doc()
+          assert.equal(doc!.text, "You there?\nIn the mirror")
+        })
 
         triggerUndo()
+
         cy.get("div.cm-content").should(
           "have.html",
           expectedHtml(["You there?"])
         )
+        cy.wait(0).then(async () => {
+          const doc = await handle.doc()
+          assert.equal(doc!.text, "You there?")
+        })
 
         triggerUndo()
+
         cy.get("div.cm-content").should("have.html", expectedHtml([""]))
+        cy.wait(0).then(async () => {
+          const doc = await handle.doc()
+          assert.equal(doc!.text, "")
+        })
 
         triggerRedo()
+
         cy.get("div.cm-content").should(
           "have.html",
           expectedHtml(["You there?"])
         )
+        cy.wait(0).then(async () => {
+          const doc = await handle.doc()
+          assert.equal(doc!.text, "You there?")
+        })
 
         triggerRedo()
+
         cy.get("div.cm-content").should(
           "have.html",
           expectedHtml(["You there?", "In the mirror"], 1)
         )
+        cy.wait(0).then(async () => {
+          const doc = await handle.doc()
+          assert.equal(doc!.text, "You there?\nIn the mirror")
+        })
 
         cy.get("div.cm-content").type("!")
+
         cy.get("div.cm-content").should(
           "have.html",
           expectedHtml(["You there?!", "In the mirror"], 0)
         )
+        cy.wait(0).then(async () => {
+          const doc = await handle.doc()
+          assert.equal(doc!.text, "You there?!\nIn the mirror")
+        })
 
         triggerRedo()
+
         cy.get("div.cm-content").should(
           "have.html",
           expectedHtml(["You there?!", "In the mirror"], 0)
         )
+        cy.wait(0).then(async () => {
+          const doc = await handle.doc()
+          assert.equal(doc!.text, "You there?!\nIn the mirror")
+        })
       })
     })
   })
