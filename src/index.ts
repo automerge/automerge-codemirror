@@ -1,2 +1,1 @@
-export { plugin } from "./plugin"
-export { PatchSemaphore } from "./PatchSemaphore"
+export { automergeSyncPlugin } from "./plugin"

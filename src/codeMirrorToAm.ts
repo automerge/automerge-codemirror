@@ -1,38 +1,24 @@
-import { next as am } from "@automerge/automerge"
+import { next as A } from "@automerge/automerge"
+import { DocHandle } from "@automerge/automerge-repo"
 import { Heads } from "@automerge/automerge"
-import { EditorState, Text, Transaction } from "@codemirror/state"
-import { type Field } from "./plugin"
+import { Text, Transaction } from "@codemirror/state"
+import { isReconcileTx } from "./plugin"
 
-type Update = (
-  atHeads: Heads,
-  change: (doc: am.Doc<unknown>) => void
-) => Heads | undefined
+export const applyCmTransactionsToAmHandle = (
+  handle: DocHandle<unknown>,
+  path: A.Prop[],
+  transactions: Transaction[]
+): A.Heads | undefined => {
+  const transactionsWithChanges = transactions.filter(
+    tr => !isReconcileTx(tr) && !tr.changes.empty
+  )
 
-export default function (
-  field: Field,
-  update: Update,
-  transactions: Transaction[],
-  state: EditorState
-): Heads | undefined {
-  const { lastHeads, path } = state.field(field)
-
-  // We don't want to call `automerge.updateAt` if there are no changes.
-  // Otherwise later on `automerge.diff` will return empty patches that result in a no-op but still mess up the selection.
-  let hasChanges = false
-  for (const tr of transactions) {
-    if (!tr.changes.empty) {
-      tr.changes.iterChanges(() => {
-        hasChanges = true
-      })
-    }
+  if (transactionsWithChanges.length === 0) {
+    return
   }
 
-  if (!hasChanges) {
-    return undefined
-  }
-
-  const newHeads = update(lastHeads, (doc: am.Doc<unknown>) => {
-    for (const tr of transactions) {
+  handle.change((doc: A.Doc<unknown>) => {
+    transactionsWithChanges.forEach(tr => {
       tr.changes.iterChanges(
         (
           fromA: number,
@@ -43,10 +29,11 @@ export default function (
         ) => {
           // We are cloning the path as `am.splice` calls `.unshift` on it, modifying it in place,
           // causing the path to be broken on subsequent changes
-          am.splice(doc, path.slice(), fromB, toA - fromA, inserted.toString())
+          A.splice(doc, path.slice(), fromB, toA - fromA, inserted.toString())
         }
       )
-    }
+    })
   })
-  return newHeads
+
+  return A.getHeads(handle.docSync())
 }

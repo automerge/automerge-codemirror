@@ -3,3 +3,4 @@ yarn-error.log
 dist/
 cypress/videos
 cypress/screenshots
+.vscode

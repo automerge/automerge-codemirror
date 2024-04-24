@@ -1,92 +1,87 @@
-import {
-  Annotation,
-  EditorState,
-  StateEffect,
-  StateField,
-  Transaction,
-  TransactionSpec,
-} from "@codemirror/state"
-import * as automerge from "@automerge/automerge"
-import { Doc, Heads, Prop } from "@automerge/automerge"
-
-export type Value = {
-  lastHeads: Heads
-  path: Prop[]
-  unreconciledTransactions: Transaction[]
-}
-
-type UpdateHeads = {
-  newHeads: Heads
-}
-
-export const effectType = StateEffect.define<UpdateHeads>({})
-
-export function updateHeads(newHeads: Heads): StateEffect<UpdateHeads> {
-  return effectType.of({ newHeads })
-}
-
-export function getLastHeads(state: EditorState, field: Field): Heads {
-  return state.field(field).lastHeads
-}
-
-export function getPath(state: EditorState, field: Field): Prop[] {
-  return state.field(field).path
-}
-
-export type Field = StateField<Value>
-
-export function plugin<T>(doc: Doc<T>, path: Prop[]): StateField<Value> {
-  return StateField.define({
-    create() {
-      return {
-        lastHeads: automerge.getHeads(doc),
-        unreconciledTransactions: [],
-        path: path.slice(),
-      }
-    },
-    update(value: Value, tr: Transaction) {
-      const result = {
-        lastHeads: value.lastHeads,
-        unreconciledTransactions: value.unreconciledTransactions.slice(),
-        path: path.slice(),
-      }
-      let clearUnreconciled = false
-      for (const effect of tr.effects) {
-        if (effect.is(effectType)) {
-          result.lastHeads = effect.value.newHeads
-          clearUnreconciled = true
-        }
-      }
-      if (clearUnreconciled) {
-        result.unreconciledTransactions = []
-      } else {
-        if (!isReconcileTx(tr)) {
-          result.unreconciledTransactions.push(tr)
-        }
-      }
-      return result
-    },
-  })
-}
+import { next as A } from "@automerge/automerge"
+import { EditorView, ViewPlugin, ViewUpdate } from "@codemirror/view"
+import { Transaction, Annotation } from "@codemirror/state"
+import { DocHandle } from "@automerge/automerge-repo"
+import { applyCmTransactionsToAmHandle } from "./codeMirrorToAm"
+import { applyAmPatchesToCm } from "./amToCodemirror"
 
 export const reconcileAnnotationType = Annotation.define<unknown>()
 
-export function isReconcileTx(tr: Transaction): boolean {
-  return !!tr.annotation(reconcileAnnotationType)
+export const isReconcileTx = (tr: Transaction): boolean =>
+  !!tr.annotation(reconcileAnnotationType)
+
+type AutomergeSyncPluginConfig = {
+  handle: DocHandle<any>
+  path: A.Prop[]
 }
 
-export function makeReconcile(tr: TransactionSpec) {
-  if (tr.annotations != null) {
-    if (tr.annotations instanceof Array) {
-      tr.annotations = [...tr.annotations, reconcileAnnotationType.of({})]
-    } else {
-      tr.annotations = [tr.annotations, reconcileAnnotationType.of({})]
-    }
-  } else {
-    tr.annotations = [reconcileAnnotationType.of({})]
+export const automergeSyncPlugin = ({
+  handle,
+  path,
+}: AutomergeSyncPluginConfig) => {
+  if (!handle.isReady) {
+    throw new Error(
+      "ensure the handle is ready before initializing the automergeSyncPlugin"
+    )
   }
-  //return {
-  //...tr,
-  //annotations: reconcileAnnotationType.of({})
-  //}
+
+  return ViewPlugin.fromClass(
+    class {
+      view: EditorView
+      reconciledHeads = A.getHeads(handle.docSync())
+      isProcessingCmTransaction = false
+
+      constructor(view: EditorView) {
+        this.view = view
+
+        this.onChange = this.onChange.bind(this)
+        handle.on("change", this.onChange)
+      }
+
+      update(update: ViewUpdate) {
+        // start processing codemirror transaction
+        // changes that are created through the transaction are ignored in the change listener on the handle
+        this.isProcessingCmTransaction = true
+
+        const newHeads = applyCmTransactionsToAmHandle(
+          handle,
+          path,
+          update.transactions as Transaction[]
+        )
+
+        if (newHeads) {
+          this.reconciledHeads = newHeads
+        }
+
+        // finish processing transaction
+        this.isProcessingCmTransaction = false
+      }
+
+      onChange = () => {
+        // ignore changes that where triggered while processing a codemirror transaction
+        if (this.isProcessingCmTransaction) {
+          return
+        }
+
+        const currentHeads = A.getHeads(handle.docSync())
+        if (A.equals(currentHeads, this.reconciledHeads)) {
+          return
+        }
+
+        // get the diff between the reconciled heads and the new heads
+        // and apply that to the codemirror doc
+        const patches = A.diff(
+          handle.docSync(),
+          this.reconciledHeads,
+          currentHeads
+        )
+        applyAmPatchesToCm(this.view, path, patches)
+        this.reconciledHeads = currentHeads
+      }
+
+      destroy() {
+        handle.off("change", this.onChange)
+      }
+    }
+  )
 }

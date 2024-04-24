@@ -6,21 +6,17 @@ import {
   PutPatch,
   SpliceTextPatch,
 } from "@automerge/automerge"
-import {
-  ChangeSet,
-  ChangeSpec,
-  EditorSelection,
-  EditorState,
-} from "@codemirror/state"
+import { ChangeSet, ChangeSpec, EditorState } from "@codemirror/state"
 import { EditorView } from "@codemirror/view"
 import { reconcileAnnotationType } from "./plugin"
 
-export default function (
+export const applyAmPatchesToCm = (
   view: EditorView,
-  selection: EditorSelection,
   target: Prop[],
   patches: Patch[]
-) {
+) => {
+  let selection = view.state.selection
+
   for (const patch of patches) {
     const changeSpec = handlePatch(patch, target, view.state)
     if (changeSpec != null) {

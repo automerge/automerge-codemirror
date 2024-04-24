@@ -1,52 +1,70 @@
-import React, { useEffect, useRef } from "react"
-
+import React, { useEffect, useState } from "react"
 import { EditorView } from "@codemirror/view"
 import { basicSetup } from "codemirror"
-import { Prop } from "@automerge/automerge"
-import { plugin as amgPlugin, PatchSemaphore } from "../src"
+import { automergeSyncPlugin } from "../src"
+import { undo, redo } from "@codemirror/commands"
 import { type DocHandle } from "@automerge/automerge-repo"
 
 export type EditorProps = {
   handle: DocHandle<{ text: string }>
-  path: Prop[]
 }
 
-export function Editor({ handle, path }: EditorProps) {
-  const containerRef = useRef(null)
-  const editorRoot = useRef<HTMLDivElement>(null)
+export function Editor({ handle }: EditorProps) {
+  const [container, setContainer] = useState<HTMLDivElement | null>()
+  const [editorView, setEditorView] = useState<EditorView>()
 
   useEffect(() => {
-    const doc = handle.docSync()
-    const source = doc.text // this should use path
-    const plugin = amgPlugin(doc, path)
-    const semaphore = new PatchSemaphore(plugin)
-    const view = (editorRoot.current = new EditorView({
-      doc: source,
-      extensions: [basicSetup, plugin],
-      dispatch(transaction) {
-        view.update([transaction])
-        semaphore.reconcile(handle, view)
-      },
-      parent: containerRef.current,
-    }))
-
-    const handleChange = ({ doc, patchInfo }) => {
-      semaphore.reconcile(handle, view)
+    if (!container) {
+      return
     }
 
-    handle.addListener("change", handleChange)
+    const doc = handle.docSync()
+    const source = doc!.text
+    const view = new EditorView({
+      doc: source,
+      extensions: [
+        basicSetup,
+        automergeSyncPlugin({
+          handle,
+          path: ["text"],
+        }),
+      ],
+      parent: container,
+    })
+
+    setEditorView(view)
 
     return () => {
-      handle.removeListener("change", handleChange)
       view.destroy()
     }
-  }, [])
+  }, [container])
+
+  const onClickUndoButton = () => {
+    if (editorView) {
+      undo(editorView)
+    }
+  }
+
+  const onClickRedoButton = () => {
+    if (editorView) {
+      redo(editorView)
+    }
+  }
 
   return (
-    <div
-      className="codemirror-editor"
-      ref={containerRef}
-      onKeyDown={evt => evt.stopPropagation()}
-    />
+    <div>
+      <button id="undo" onClick={onClickUndoButton}>
+        undo
+      </button>
+      <button id="redo" onClick={onClickRedoButton}>
+        redo
+      </button>
+
+      <div
+        className="codemirror-editor"
+        ref={setContainer}
+        onKeyDown={evt => evt.stopPropagation()}
+      />
+    </div>
   )
 }
