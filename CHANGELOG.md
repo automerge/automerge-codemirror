@@ -1,3 +1,7 @@
+## 0.0.12
+
+* Update to @automerge/automerge@2.2.3 and @automerge/automerge-repo@1.2.0
+
 ## 0.0.11
 
 * Setting up the plugin now just requires that you create an

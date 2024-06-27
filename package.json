@@ -1,6 +1,6 @@
 {
   "name": "@automerge/automerge-codemirror",
-  "version": "0.0.11",
+  "version": "0.0.12",
   "main": "dist/index.js",
   "license": "MIT",
   "scripts": {
@@ -15,13 +15,13 @@
     "dist/**/*.js"
   ],
   "dependencies": {
-    "@automerge/automerge": "^2.1.9",
+    "@automerge/automerge": "^2.2.3",
     "@codemirror/state": "^6.3.0",
     "@codemirror/view": "^6.21.3",
     "codemirror": "^6.0.1"
   },
   "devDependencies": {
-    "@automerge/automerge-repo": "^1.0.19",
+    "@automerge/automerge-repo": "^1.2.0",
     "@cypress/react18": "^2.0.0",
     "@types/react": "^18.2.79",
     "@typescript-eslint/eslint-plugin": "^5.60.0",
