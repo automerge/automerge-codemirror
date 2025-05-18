@@ -1,6 +1,5 @@
 import { next as A } from "@automerge/automerge"
 import { DocHandle } from "@automerge/automerge-repo"
-import { Heads } from "@automerge/automerge"
 import { Text, Transaction } from "@codemirror/state"
 import { isReconcileTx } from "./plugin"
 
@@ -35,5 +34,5 @@ export const applyCmTransactionsToAmHandle = (
     })
   })
 
-  return A.getHeads(handle.docSync())
+  return A.getHeads(handle.doc())
 }

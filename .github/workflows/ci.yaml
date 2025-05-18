@@ -33,6 +33,10 @@ jobs:
         uses: cypress-io/github-action@v6
         with:
           component: true
+          # CodeMirror uses a contenteditable div to render the editor, but 
+          # Cypress does not support contenteditable elements in chromium,
+          # so we just run the tests in Firefox
+          browser: firefox
 
 
 

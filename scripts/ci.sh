@@ -3,4 +3,4 @@ set -e
 yarn prettier
 yarn lint
 yarn tsc
-yarn cypress run --component
+yarn cypress run --component --browser firefox

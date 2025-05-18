@@ -94,7 +94,7 @@ function handlePut(
   if (typeof patch.value !== "string") {
     return [] // TODO(dmaretskyi): How to handle non string values?
   }
-  return [{ from: 0, to: length, insert: patch.value as any }]
+  return [{ from: 0, to: length, insert: patch.value }]
 }
 
 // If the path of the patch is of the form [path, <index>] then we know this is
