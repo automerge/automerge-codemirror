@@ -1,7 +1,7 @@
 import { next as A } from "@automerge/automerge"
-import { DocHandle } from "@automerge/automerge-repo"
 import { Text, Transaction } from "@codemirror/state"
 import { isReconcileTx } from "./plugin"
+import { type DocHandle } from "./DocHandle"
 
 export const applyCmTransactionsToAmHandle = (
   handle: DocHandle<unknown>,
