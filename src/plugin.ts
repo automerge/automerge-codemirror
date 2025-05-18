@@ -1,9 +1,9 @@
 import { next as A } from "@automerge/automerge"
 import { EditorView, ViewPlugin, ViewUpdate } from "@codemirror/view"
 import { Transaction, Annotation } from "@codemirror/state"
-import { DocHandle } from "@automerge/automerge-repo"
 import { applyCmTransactionsToAmHandle } from "./codeMirrorToAm"
 import { applyAmPatchesToCm } from "./amToCodemirror"
+import { DocHandle } from "./DocHandle"
 
 export const reconcileAnnotationType = Annotation.define<unknown>()
 
@@ -19,7 +19,7 @@ export const automergeSyncPlugin = ({
   handle,
   path,
 }: AutomergeSyncPluginConfig) => {
-  if (!handle.isReady) {
+  if (!handle.isReady()) {
     throw new Error(
       "ensure the handle is ready before initializing the automergeSyncPlugin"
     )
