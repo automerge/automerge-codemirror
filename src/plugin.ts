@@ -11,7 +11,7 @@ export const isReconcileTx = (tr: Transaction): boolean =>
   !!tr.annotation(reconcileAnnotationType)
 
 type AutomergeSyncPluginConfig = {
-  handle: DocHandle<any>
+  handle: DocHandle<unknown>
   path: A.Prop[]
 }
 
@@ -28,7 +28,7 @@ export const automergeSyncPlugin = ({
   return ViewPlugin.fromClass(
     class {
       view: EditorView
-      reconciledHeads = A.getHeads(handle.docSync())
+      reconciledHeads = A.getHeads(handle.doc())
       isProcessingCmTransaction = false
 
       constructor(view: EditorView) {
@@ -63,18 +63,14 @@ export const automergeSyncPlugin = ({
           return
         }
 
-        const currentHeads = A.getHeads(handle.docSync())
+        const currentHeads = A.getHeads(handle.doc())
         if (A.equals(currentHeads, this.reconciledHeads)) {
           return
         }
 
         // get the diff between the reconciled heads and the new heads
         // and apply that to the codemirror doc
-        const patches = A.diff(
-          handle.docSync(),
-          this.reconciledHeads,
-          currentHeads
-        )
+        const patches = A.diff(handle.doc(), this.reconciledHeads, currentHeads)
         applyAmPatchesToCm(this.view, path, patches)
         this.reconciledHeads = currentHeads
       }

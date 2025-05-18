@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react"
+import React, { useEffect, useRef, useState } from "react"
 import { EditorView } from "@codemirror/view"
 import { basicSetup } from "codemirror"
 import { automergeSyncPlugin } from "../src"
@@ -10,16 +10,16 @@ export type EditorProps = {
 }
 
 export function Editor({ handle }: EditorProps) {
-  const [container, setContainer] = useState<HTMLDivElement | null>()
+  const container = useRef<HTMLDivElement>(null)
   const [editorView, setEditorView] = useState<EditorView>()
 
   useEffect(() => {
-    if (!container) {
+    if (!container.current) {
       return
     }
 
-    const doc = handle.docSync()
-    const source = doc!.text
+    const doc = handle.doc()
+    const source = doc.text
     const view = new EditorView({
       doc: source,
       extensions: [
@@ -29,7 +29,7 @@ export function Editor({ handle }: EditorProps) {
           path: ["text"],
         }),
       ],
-      parent: container,
+      parent: container.current,
     })
 
     setEditorView(view)
@@ -62,7 +62,7 @@ export function Editor({ handle }: EditorProps) {
 
       <div
         className="codemirror-editor"
-        ref={setContainer}
+        ref={container}
         onKeyDown={evt => evt.stopPropagation()}
       />
     </div>

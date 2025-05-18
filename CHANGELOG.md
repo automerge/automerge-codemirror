@@ -1,10 +1,10 @@
 ## 0.0.12
 
-* Update to @automerge/automerge@2.2.3 and @automerge/automerge-repo@1.2.0
+- Update to @automerge/automerge@2.2.3 and @automerge/automerge-repo@1.2.0
 
 ## 0.0.11
 
-* Setting up the plugin now just requires that you create an
+- Setting up the plugin now just requires that you create an
   `automergeSyncPlugin` and pass it the `handle` and `path`. I.e. you go from
   this:
 
@@ -43,4 +43,3 @@
     parent: container,
   })
   ```
-

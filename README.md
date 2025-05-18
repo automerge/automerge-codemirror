@@ -29,4 +29,3 @@ const view = new EditorView({
   parent: container,
 })
 ```
-
