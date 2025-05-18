@@ -1,6 +1,7 @@
 {
   "name": "@automerge/automerge-codemirror",
   "version": "0.0.12",
+  "type": "module",
   "main": "dist/index.js",
   "license": "MIT",
   "scripts": {

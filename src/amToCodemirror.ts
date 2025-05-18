@@ -8,7 +8,7 @@ import {
 } from "@automerge/automerge"
 import { ChangeSet, ChangeSpec, EditorState } from "@codemirror/state"
 import { EditorView } from "@codemirror/view"
-import { reconcileAnnotationType } from "./plugin"
+import { reconcileAnnotationType } from "./plugin.js"
 
 export const applyAmPatchesToCm = (
   view: EditorView,

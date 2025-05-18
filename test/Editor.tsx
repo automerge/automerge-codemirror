@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react"
 import { EditorView } from "@codemirror/view"
 import { basicSetup } from "codemirror"
-import { automergeSyncPlugin } from "../src"
+import { automergeSyncPlugin } from "../src/index.js"
 import { undo, redo } from "@codemirror/commands"
 import { type DocHandle } from "@automerge/automerge-repo"
 

@@ -1,9 +1,9 @@
 import { next as A } from "@automerge/automerge"
 import { EditorView, ViewPlugin, ViewUpdate } from "@codemirror/view"
 import { Transaction, Annotation } from "@codemirror/state"
-import { applyCmTransactionsToAmHandle } from "./codeMirrorToAm"
-import { applyAmPatchesToCm } from "./amToCodemirror"
-import { DocHandle } from "./DocHandle"
+import { applyCmTransactionsToAmHandle } from "./codeMirrorToAm.js"
+import { applyAmPatchesToCm } from "./amToCodemirror.js"
+import { DocHandle } from "./DocHandle.js"
 
 export const reconcileAnnotationType = Annotation.define<unknown>()
 
