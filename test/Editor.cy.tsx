@@ -1,7 +1,7 @@
 import React from "react"
-import { Editor } from "./Editor"
+import { Editor } from "./Editor.js"
 import { next as automerge } from "@automerge/automerge"
-import { Repo } from "@automerge/automerge-repo"
+import { DocHandle, Repo } from "@automerge/automerge-repo"
 import { mount } from "cypress/react"
 
 type TextDoc = { text: string }
@@ -155,7 +155,7 @@ describe("<Editor />", () => {
           )
         })
 
-      let branch
+      let branch: DocHandle<TextDoc>
       // create a remote change then merge it in
       cy.wait(0)
         .then(() => {
@@ -176,7 +176,7 @@ describe("<Editor />", () => {
       // Now create another remote change and receive that
       cy.wait(0)
         .then(() => {
-          branch.change(branch, d => {
+          branch.change(d => {
             automerge.splice(d, ["text"], 5, 0, " hello")
           })
           handle.merge(branch)
