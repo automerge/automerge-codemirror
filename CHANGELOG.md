@@ -1,3 +1,23 @@
+## 0.1.0
+
+- Update API to match @automerge/automerge-repo 2.0. This is a breaking change
+  because the `handle` argument to the plugin must now have a synchronous `doc` 
+  method, rather than the `docSync` method. If you can't update to 
+  `automerge-repo` or you are using some other handle implementation then you
+  can adapt your existing handle with this code:
+
+  ```typescript
+  import { type DocHandle } from "@automerge/automerge-codemirror"
+  import { type DocHandle as RepoHandle } from "@automerge/automerge-repo"
+
+  // Convert an automerge-repo 1.0 DocHandle to the interface this plugin expects
+  function makeHandle<T>(h: RepoHandle<T>): DocHandle<T> {
+      return Object.assign({}, h, {
+          doc: () => h.docSync(),
+      })
+  }
+  ```
+
 ## 0.0.12
 
 - Update to @automerge/automerge@2.2.3 and @automerge/automerge-repo@1.2.0
