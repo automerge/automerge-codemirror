@@ -57,7 +57,9 @@ function handleInsert(target: Prop[], patch: InsertPatch): Array<ChangeSpec> {
   if (index == null) {
     return []
   }
-  const text = patch.values.map(v => (v ? v.toString() : "")).join("")
+  const text = patch.values
+    .map(v => (typeof v == "string" ? v : "\ufffc"))
+    .join("")
   return [{ from: index, to: index, insert: text }]
 }
 
