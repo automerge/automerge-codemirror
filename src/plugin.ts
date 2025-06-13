@@ -1,4 +1,4 @@
-import { next as A } from "@automerge/automerge"
+import * as A from "@automerge/automerge"
 import { EditorView, ViewPlugin, ViewUpdate } from "@codemirror/view"
 import { Transaction, Annotation } from "@codemirror/state"
 import { applyCmTransactionsToAmHandle } from "./codeMirrorToAm.js"

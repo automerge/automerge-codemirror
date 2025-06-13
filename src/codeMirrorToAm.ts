@@ -1,4 +1,4 @@
-import { next as A } from "@automerge/automerge"
+import * as A from "@automerge/automerge"
 import { Text, Transaction } from "@codemirror/state"
 import { isReconcileTx } from "./plugin.js"
 import { type DocHandle } from "./DocHandle.js"

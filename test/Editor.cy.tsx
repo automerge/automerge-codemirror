@@ -1,6 +1,6 @@
 import React from "react"
 import { Editor } from "./Editor.js"
-import { next as automerge } from "@automerge/automerge"
+import * as automerge from "@automerge/automerge"
 import { DocHandle, Repo } from "@automerge/automerge-repo"
 import { mount } from "cypress/react"
 
