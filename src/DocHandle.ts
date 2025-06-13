@@ -1,4 +1,4 @@
-import { next as A } from "@automerge/automerge"
+import * as A from "@automerge/automerge"
 
 export interface DocHandle<T> {
   isReady: () => boolean
