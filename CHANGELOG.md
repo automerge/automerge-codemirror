@@ -1,8 +1,12 @@
+## 0.2.0
+
+- Update the automerge dependency to 3.0.0
+
 ## 0.1.0
 
 - Update API to match @automerge/automerge-repo 2.0. This is a breaking change
-  because the `handle` argument to the plugin must now have a synchronous `doc` 
-  method, rather than the `docSync` method. If you can't update to 
+  because the `handle` argument to the plugin must now have a synchronous `doc`
+  method, rather than the `docSync` method. If you can't update to
   `automerge-repo` or you are using some other handle implementation then you
   can adapt your existing handle with this code:
 
