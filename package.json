@@ -9,7 +9,7 @@
     "watch": "yarn tsc-watch -p tsconfig.build.json",
     "lint": "eslint .",
     "prettier": "prettier '**/*.{ts,tsx,}' --check",
-    "cypress:open": "cypress open --browser firefox --component"
+    "test": "cypress run --component"
   },
   "files": [
     "dist/**/*.ts",
@@ -23,6 +23,7 @@
   },
   "devDependencies": {
     "@automerge/automerge-repo": "^2.1.0",
+    "@codemirror/commands": "^6.0.0",
     "@types/react": "^18.2.79",
     "@typescript-eslint/eslint-plugin": "^8.32.1",
     "@typescript-eslint/parser": "^8.32.1",
