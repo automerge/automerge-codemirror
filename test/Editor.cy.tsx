@@ -186,7 +186,7 @@ describe("<Editor />", () => {
       })
     })
 
-    it("should undo changes made through automerge", () => {
+    it("should not undo changes made through automerge", () => {
       const { handle } = makeHandle("Hello World!")
       mount(<Editor handle={handle} />)
 
@@ -204,12 +204,44 @@ describe("<Editor />", () => {
           assert.equal(doc.text, "Hello Happy World!")
         })
 
+        // Remote changes are not part of the local undo history, so undo
+        // has nothing to revert.
         triggerUndo()
-        assertContent(["Hello World!"])
+        assertContent(["Hello Happy World!"])
 
         cy.wait(0).then(() => {
           const doc = handle.doc()
-          assert.equal(doc.text, "Hello World!")
+          assert.equal(doc.text, "Hello Happy World!")
+        })
+      })
+    })
+
+    it("should undo local changes only, preserving changes made through automerge", () => {
+      const { handle } = makeHandle("Hello World!")
+      mount(<Editor handle={handle} />)
+
+      cy.wait(0).then(() => {
+        cy.get("div.cm-content").click()
+        cy.get("div.cm-content").type(" You there?")
+
+        assertContent(["Hello World! You there?"])
+
+        cy.wait(0).then(() => {
+          handle.change(d => {
+            automerge.splice(d, ["text"], 5, 0, " Happy")
+          })
+
+          assertContent(["Hello Happy World! You there?"])
+
+          // Undo reverts only the local edit; the remote insertion stays
+          // (history entries are mapped through remote transactions).
+          triggerUndo()
+          assertContent(["Hello Happy World!"])
+
+          cy.wait(0).then(() => {
+            const doc = handle.doc()
+            assert.equal(doc.text, "Hello Happy World!")
+          })
         })
       })
     })
