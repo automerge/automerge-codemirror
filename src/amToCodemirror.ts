@@ -27,11 +27,7 @@ export const applyAmPatchesToCm = (
     if (changeSpec != null) {
       const changeSet = ChangeSet.of(changeSpec, view.state.doc.length, "\n")
       selection = selection.map(changeSet, 1)
-      // Changes arriving from automerge are remote changes: they must not
-      // land on the local undo history (undo should only revert the user's
-      // own edits, as in @codemirror/collab). `addToHistory: false` keeps
-      // them off the stack while existing history entries are still mapped
-      // through them.
+      // Remote changes from automerge are excluded from local undo (addToHistory: false).
       view.dispatch({
         changes: changeSet,
         annotations: [
