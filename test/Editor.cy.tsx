@@ -3,6 +3,7 @@ import { Editor } from "./Editor.js"
 import * as automerge from "@automerge/automerge"
 import { DocHandle, Repo } from "@automerge/automerge-repo"
 import { mount } from "cypress/react"
+import { type DocHandleChangePayload } from "../src/index.js"
 
 type TextDoc = { text: string }
 
@@ -348,6 +349,108 @@ describe("<Editor />", () => {
           assert.equal(doc.text, "You there?!\nIn the mirror")
         })
       })
+    })
+  })
+
+  describe("backing swaps", () => {
+    // A handle whose backing document can be swapped in place, as
+    // automerge-repo's reloadable handles do: same identity, different doc,
+    // and a change event carrying `scopeReplaced: true`.
+    const makeSwappableHandle = (initial: DocHandle<TextDoc>) => {
+      let backing = initial
+
+      type Listener = (payload?: DocHandleChangePayload) => void
+      const listeners = new Set<Listener>()
+      const forward = () => listeners.forEach(l => l())
+      backing.on("change", forward)
+
+      const swappable = {
+        isReady: () => backing.isReady(),
+        isReadOnly: () => backing.isReadOnly(),
+        doc: () => backing.doc(),
+        change: (cb: (d: TextDoc) => void) => backing.change(cb),
+        on: (_event: "change", cb: Listener) => {
+          listeners.add(cb)
+        },
+        off: (_event: "change", cb: Listener) => {
+          listeners.delete(cb)
+        },
+      } as unknown as DocHandle<TextDoc>
+
+      // Re-point the handle at `next`.
+      const swap = (next: DocHandle<TextDoc>) => {
+        backing.off("change", forward)
+        backing = next
+        backing.on("change", forward)
+        listeners.forEach(l => l({ scopeReplaced: true, doc: backing.doc() }))
+      }
+      return { swappable, swap }
+    }
+
+    it("rebuilds the editor content on a change flagged scopeReplaced", () => {
+      const { handle } = makeHandle("Hello World!")
+      const { swappable, swap } = makeSwappableHandle(handle)
+      mount(<Editor handle={swappable} />)
+      assertContent(["Hello World!"])
+
+      const { handle: second } = makeHandle("Other timeline")
+      cy.wait(0).then(() => swap(second))
+      assertContent(["Other timeline"])
+
+      // edits after the swap land in the new backing
+      cy.get("div.cm-content").type("!")
+      cy.wait(0).then(() => {
+        assert.equal(second.doc().text, "Other timeline!")
+      })
+    })
+
+    it("resets the undo history when the backing is swapped", () => {
+      const { handle } = makeHandle("Hello World!")
+      const { swappable, swap } = makeSwappableHandle(handle)
+      mount(<Editor handle={swappable} />)
+      cy.get("div.cm-content").type("!")
+      assertContent(["Hello World!!"])
+
+      const { handle: second } = makeHandle("Other timeline")
+      cy.wait(0).then(() => swap(second))
+      assertContent(["Other timeline"])
+
+      // undo must not restore the old timeline's text
+      triggerUndo()
+      assertContent(["Other timeline"])
+      cy.wait(0).then(() => {
+        assert.equal(second.doc().text, "Other timeline")
+      })
+    })
+
+    it("becomes read-only when the swapped-in backing rejects writes", () => {
+      const { handle } = makeHandle("Hello World!")
+      const { swappable, swap } = makeSwappableHandle(handle)
+      mount(<Editor handle={swappable} />)
+      cy.get("div.cm-content").should("have.attr", "contenteditable", "true")
+
+      // a view pinned to heads reports isReadOnly() and rejects writes,
+      // like scrubbing to a historical version does
+      const { handle: second } = makeHandle("Other timeline")
+      cy.wait(0).then(() => swap(second.view(second.heads())))
+      assertContent(["Other timeline"])
+      cy.get("div.cm-content").should("have.attr", "contenteditable", "false")
+    })
+  })
+
+  describe("read-only handles", () => {
+    // A handle that rejects writes from the start: a view pinned to
+    // historical heads.
+    const makeReadOnlyHandle = (text: string) => {
+      const { handle } = makeHandle(text)
+      return handle.view(handle.heads())
+    }
+
+    it("renders non-editable", () => {
+      const readOnly = makeReadOnlyHandle("Hello World!")
+      mount(<Editor handle={readOnly} />)
+      assertContent(["Hello World!"])
+      cy.get("div.cm-content").should("have.attr", "contenteditable", "false")
     })
   })
 })

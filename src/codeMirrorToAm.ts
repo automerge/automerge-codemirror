@@ -16,6 +16,13 @@ export const applyCmTransactionsToAmHandle = (
     return
   }
 
+  // A read-only handle (e.g. pinned to historical heads) rejects writes:
+  // never forward editor changes to it. The automergeReadOnly extension
+  // keeps the editor from producing such changes in the first place.
+  if (handle.isReadOnly?.()) {
+    return
+  }
+
   handle.change((doc: A.Doc<unknown>) => {
     transactionsWithChanges.forEach(tr => {
       tr.changes.iterChanges(

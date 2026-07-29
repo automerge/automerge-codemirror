@@ -1,6 +1,6 @@
 {
   "name": "@automerge/automerge-codemirror",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "type": "module",
   "main": "dist/index.js",
   "license": "MIT",
@@ -9,7 +9,7 @@
     "watch": "yarn tsc-watch -p tsconfig.build.json",
     "lint": "eslint .",
     "prettier": "prettier '**/*.{ts,tsx,}' --check",
-    "test": "cypress run --component"
+    "test": "ELECTRON_RUN_AS_NODE= cypress run --component"
   },
   "files": [
     "dist/**/*.ts",
@@ -17,13 +17,13 @@
   ],
   "dependencies": {
     "@automerge/automerge": "^3.0.0",
+    "@codemirror/commands": "^6.0.0",
     "@codemirror/state": "^6.0.0",
     "@codemirror/view": "^6.0.0",
     "codemirror": "^6.0.0"
   },
   "devDependencies": {
     "@automerge/automerge-repo": "^2.1.0",
-    "@codemirror/commands": "^6.0.0",
     "@types/react": "^18.2.79",
     "@typescript-eslint/eslint-plugin": "^8.32.1",
     "@typescript-eslint/parser": "^8.32.1",

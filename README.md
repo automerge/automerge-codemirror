@@ -6,22 +6,20 @@ This plugin adds collaborative editing to codemirror using `automerge-repo`.
 
 ```typescript
 import { Repo } from "@automerge/automerge-repo";
-import { automergeSyncPlugin } from "@automerge/automerge-codemirror";
+import { automergePlugin } from "@automerge/automerge-codemirror";
 import { EditorView } from "@codemirror/view"
-import { basicSetup } from "codemirror"
 
 // Setup a repo and create a doc handle. In practice you'll probably get a
 // DocHandle by loading it from a document URL
 const repo = new Repo(..)
-const doc = repo.create({text: ""})
+const handle = repo.create({text: ""})
 
 // Setup the codemirror view
 const container = document.createElement("div")
 const view = new EditorView({
   doc: handle.doc().text,
   extensions: [
-    basicSetup,
-    automergeSyncPlugin({
+    automergePlugin({
       handle,
       path: ["text"],
     }),
@@ -29,6 +27,28 @@ const view = new EditorView({
   parent: container,
 })
 ```
+
+`automergePlugin` bundles three pieces:
+
+- two-way sync between the automerge document and the editor
+- local-only undo/redo history, as in @codemirror/collab: remote changes
+  never land on the undo stack, and the stack is reset whenever the handle's
+  backing document is swapped in place (as automerge-repo's subduction
+  pre-releases do when a handle is pinned to historical heads or re-pointed
+  at a clone), so undo can never write a peer's or another timeline's text
+  into the document
+- read-only tracking: the editor rejects edits while the handle's optional
+  `isReadOnly()` method reports true
+
+> [!WARNING]
+> Don't add another `history()` extension to the editor — note that both
+> `basicSetup` and `minimalSetup` from the `codemirror` package include one.
+> A second copy keeps the undo state alive across the bundled reset and
+> defeats it; the plugin logs a warning when it detects this.
+
+If you want to compose things yourself, the pieces are also exported
+individually as `automergeSyncPlugin`, `automergeHistory`, and
+`automergeReadOnly`.
 
 ### Automerge Repo 1.0 Compatibility
 

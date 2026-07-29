@@ -1,3 +1,27 @@
+## 0.3.0
+
+- Undo is now local-only, as in @codemirror/collab: changes arriving from
+  automerge are dispatched with `addToHistory: false` / `remote: true`, so
+  undo and redo revert only the user's own edits while existing history
+  entries are still mapped through remote changes.
+- Support handles whose backing document can be swapped in place, as
+  automerge-repo's subduction pre-releases do when a handle is pinned to
+  historical heads or re-pointed at a clone. `A.diff` ignores heads that
+  aren't part of the doc's history, so when the backings share history the
+  editor gets minimal patches, and when they share nothing the diff
+  degenerates into full-document patches that rebuild the editor content.
+  Handles whose backing never changes are unaffected.
+- New `automergePlugin({ handle, path })` entry point, bundling sync with an
+  undo history that is reset on backing swaps and with read-only tracking
+  driven by the handle's optional `isReadOnly()` method. The pieces are also
+  exported individually as `automergeHistory` and `automergeReadOnly`. Don't
+  combine with another `history()` extension (`basicSetup` includes one): the
+  bundled history must own the only copy for its reset to work, and it warns
+  when it doesn't.
+- The sync write path ignores editor changes while `handle.isReadOnly()`
+  reports true, so a mis-composed editor can never write into a pinned
+  handle.
+
 ## 0.2.0
 
 - Update the automerge dependency to 3.0.0
