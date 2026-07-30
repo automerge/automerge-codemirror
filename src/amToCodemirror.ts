@@ -6,7 +6,12 @@ import {
   PutPatch,
   SpliceTextPatch,
 } from "@automerge/automerge"
-import { ChangeSet, ChangeSpec, EditorState } from "@codemirror/state"
+import {
+  ChangeSet,
+  ChangeSpec,
+  EditorState,
+  Transaction,
+} from "@codemirror/state"
 import { EditorView } from "@codemirror/view"
 import { reconcileAnnotationType } from "./plugin.js"
 
@@ -22,9 +27,14 @@ export const applyAmPatchesToCm = (
     if (changeSpec != null) {
       const changeSet = ChangeSet.of(changeSpec, view.state.doc.length, "\n")
       selection = selection.map(changeSet, 1)
+      // Remote changes from automerge are excluded from local undo (addToHistory: false).
       view.dispatch({
         changes: changeSet,
-        annotations: reconcileAnnotationType.of({}),
+        annotations: [
+          reconcileAnnotationType.of({}),
+          Transaction.addToHistory.of(false),
+          Transaction.remote.of(true),
+        ],
       })
     }
   }

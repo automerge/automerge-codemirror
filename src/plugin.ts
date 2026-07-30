@@ -57,6 +57,16 @@ export const automergeSyncPlugin = ({
         this.isProcessingCmTransaction = false
       }
 
+      // Changes with a replaced scope (the handle was re-pointed at a
+      // different backing document) need no special-casing here. A.diff
+      // ignores heads that aren't in the doc's history, treating that side
+      // as the empty document: when the backings share history (heads
+      // pinning, clones) it yields minimal patches that preserve the
+      // selection, and when they share nothing it degenerates into
+      // full-document patches that rebuild the editor wholesale. Either
+      // way the patches are kept off the undo stack by applyAmPatchesToCm.
+      // The history and read-only extensions are the ones that consume the
+      // `scopeReplaced` flag.
       onChange = () => {
         // ignore changes that where triggered while processing a codemirror transaction
         if (this.isProcessingCmTransaction) {
