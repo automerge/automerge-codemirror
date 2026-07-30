@@ -13,9 +13,9 @@ type AutomergeHistoryConfig = {
  * with `scopeReplaced: true`, because the old entries describe a different
  * timeline and undo must only revert what the user has done since.
  *
- * Don't add another `history()` to the editor: the underlying history state 
- * field is a module-level singleton in `@codemirror/commands`, so a second copy 
- * elsewhere in the configuration keeps the field alive across the reset and defeats it. 
+ * Don't add another `history()` to the editor: the underlying history state
+ * field is a module-level singleton in `@codemirror/commands`, so a second copy
+ * elsewhere in the configuration keeps the field alive across the reset and defeats it.
  * If the user configures history on their own we detect this and warned about it at mount.
  */
 export const automergeHistory = ({

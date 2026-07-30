@@ -25,13 +25,10 @@ export const automergeReadOnly = ({
     isReadOnly()
       ? [EditorState.readOnly.of(true), EditorView.editable.of(false)]
       : []
-  // What the compartment was seeded with, so views only reconfigure on an
-  // actual flip.
-  const seededReadOnly = isReadOnly()
 
   const trackPlugin = ViewPlugin.fromClass(
     class {
-      applied = seededReadOnly
+      wasPrevReadOnly = isReadOnly()
       destroyed = false
 
       constructor(readonly view: EditorView) {
@@ -51,8 +48,8 @@ export const automergeReadOnly = ({
 
       sync() {
         const current = isReadOnly()
-        if (current === this.applied) return
-        this.applied = current
+        if (current === this.wasPrevReadOnly) return
+        this.wasPrevReadOnly = current
         this.view.dispatch({ effects: compartment.reconfigure(extensions()) })
       }
 
